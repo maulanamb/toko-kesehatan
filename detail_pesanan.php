@@ -72,9 +72,8 @@ $conn->close();
         <p><strong>Tanggal:</strong> <?php echo date('d M Y, H:i', strtotime($order['order_date'])); ?></p>
         <p><strong>Status:</strong> <?php echo htmlspecialchars($order['status']); ?></p>
         <p><strong>Metode Pembayaran:</strong> <?php echo htmlspecialchars($order['payment_method']); ?></p>
-        <p><strong>Alamat Pengiriman:</strong> <?B> <?php echo htmlspecialchars($order['shipping_address']); ?></p>
-    </div>
-
+        <p><strong>Alamat Pengiriman:</strong> <?php echo htmlspecialchars($order['shipping_address']); ?></p>
+</div>
     <h2>Item yang Dibeli</h2>
     <table>
         <thead>

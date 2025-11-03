@@ -1,18 +1,18 @@
 <?php
-// 1. Panggil "Satpam"
-// Jika bukan admin, script akan berhenti di sini
-require_once 'admin_check.php';
+session_start(); 
 
-// 2. Jika lolos, kita panggil koneksi database
-// (Perhatikan tanda ../ untuk "naik satu folder")
-require_once '../koneksi.php';
+// Panggil "Satpam" (sesuaikan nama file, dikomenta sementara)
+require_once 'cek_admin.php'; 
+
+require_once '../koneksi.php'; 
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Panel - Toko Alat Kesehatan</title>
+    <title>Dashboard - Admin Panel</title>
+    
     <style>
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
@@ -30,21 +30,22 @@ require_once '../koneksi.php';
         <h2>Admin Panel</h2>
         <ul>
             <li><a href="index.php">Dashboard</a></li>
-            <li><a href="manage_orders.php">Kelola Pesanan</a></li>
-            <li><a href="manage_products.php">Kelola Produk</a></li>
-            <li><a href="manage_users.php">Kelola Pengguna</a></li>
+            <li><a href="kelola_pesanan.php">Kelola Pesanan</a></li>
+            <li><a href="kelola_kategori.php">Kelola Kategori</a></li>
+            <li><a href="kelola_produk.php">Kelola Produk</a></li>
+            <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
         </ul>
     </div>
 
     <div class="content">
         <div class="header">
-            <h1>Selamat Datang, <?php echo htmlspecialchars($admin_username); ?>!</h1>
+            <h1>Dashboard</h1>
             <a href="../logout.php">Logout</a>
         </div>
-        
-        <p>Ini adalah halaman utama Admin Panel. Silakan pilih menu di samping untuk mengelola toko.</p>
 
-        </div>
+        <h2>Selamat Datang di Admin Panel</h2>
+        <p>Silakan pilih menu di sebelah kiri untuk mulai mengelola website Anda.</p>
+    </div>
 
 </body>
 </html>

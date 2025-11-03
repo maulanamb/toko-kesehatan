@@ -1,0 +1,127 @@
+<?php
+require_once 'cek_admin.php'; // Aktifkan satpam!
+require_once '../koneksi.php'; 
+?>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kelola Pengguna - Admin Panel</title>
+    
+    <style>
+        /* [CSS Anda yang sudah ada di sini] */
+        body { font-family: sans-serif; display: flex; margin: 0; }
+        .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
+        .sidebar ul { list-style: none; padding: 0; }
+        .sidebar ul li { margin: 15px 0; }
+        .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
+        .content { flex: 1; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .alert-sukses { background-color: #d4edda; color: #155724; }
+        .alert-gagal { background-color: #f8d7da; color: #721c24; }
+        .alert-info { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <ul>
+            <li><a href="index.php">Dashboard</a></li>
+            <li><a href="kelola_pesanan.php">Kelola Pesanan</a></li>
+            <li><a href="manage_kategori.php">Kelola Kategori</a></li>
+            <li><a href="kelola_produk.php">Kelola Produk</a></li>
+            <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <div class="header">
+            <h1>Kelola Pengguna (Pelanggan)</h1>
+            <a href="../logout.php">Logout</a>
+        </div>
+
+        <?php
+        if(isset($_GET['status'])) {
+            $status = $_GET['status'];
+            if($status == 'hapus_sukses') {
+                echo "<div class='alert alert-sukses'>Pengguna berhasil dihapus.</div>";
+            } 
+            // ▼▼▼ TAMBAHANNYA DI SINI ▼▼▼
+            else if($status == 'edit_sukses') {
+                echo "<div class='alert alert-sukses'>Pengguna berhasil diperbarui.</div>";
+            }
+            // ▲▲▲ SELESAI TAMBAHAN ▲▲▲
+            else if ($status == 'hapus_gagal') {
+                $error_msg = $_GET['error'] ?? '';
+                if ($error_msg == 'self') {
+                    echo "<div class='alert alert-gagal'><strong>Gagal!</strong> Anda tidak bisa menghapus akun Anda sendiri.</div>";
+                } else if ($error_msg == 'superadmin') {
+                    echo "<div class='alert alert-gagal'><strong>Gagal!</strong> Akun admin utama tidak boleh dihapus.</div>";
+                } else if (strpos($error_msg, 'foreign key constraint') !== false) {
+                    echo "<div class='alert alert-gagal'><strong>Gagal!</strong> Pengguna ini tidak bisa dihapus karena sudah memiliki data pesanan.</div>";
+                } else {
+                    echo "<div class='alert alert-gagal'>Gagal menghapus pengguna. Error: " . htmlspecialchars($error_msg) . "</div>";
+                }
+            } else if ($status == 'id_tidak_valid' || $status == 'id_tidak_ditemukan') {
+                 echo "<div class='alert alert-info'>ID Pengguna tidak valid atau tidak ditemukan.</div>";
+            }
+        }
+        ?>
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Tanggal Daftar</th>
+                    <th>Role</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                // Koneksi lagi jika diperlukan
+                if (!isset($conn) || $conn->ping() === false) {
+                    require '../koneksi.php';
+                }
+
+                $sql = "SELECT user_id, username, email, created_at, role FROM users ORDER BY created_at DESC";
+                
+                $result = $conn->query($sql); 
+
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                ?>
+                        <tr>
+                            <td><?php echo $row['user_id']; ?></td>
+                            <td><?php echo htmlspecialchars($row['username']); ?></td>
+                            <td><?php echo htmlspecialchars($row['email']); ?></td>
+                            <td><?php echo date('d M Y', strtotime($row['created_at'])); ?></td>
+                            <td><?php echo htmlspecialchars($row['role']); ?></td>
+                            <td>
+                                <a href="edit_pengguna.php?id=<?php echo $row['user_id']; ?>">Edit</a> | 
+                                <a href="hapus_pengguna.php?id=<?php echo $row['user_id']; ?>" onclick="return confirm('Peringatan: Menghapus pengguna mungkin gagal jika sudah memiliki data pesanan. Yakin ingin melanjutkan?');">Hapus</a>
+                            </td>
+                        </tr>
+                <?php
+                    }
+                } else {
+                    echo "<tr><td colspan='6' style='text-align: center;'>Belum ada pengguna yang terdaftar.</td></tr>";
+                }
+                $conn->close(); 
+                ?>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

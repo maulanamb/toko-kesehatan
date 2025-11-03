@@ -49,14 +49,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // --- Langkah B: Masukkan setiap item ke 'order_details' ---
         $sql_details = "INSERT INTO order_details (order_id, product_id, quantity, price_at_purchase) 
-                        VALUES (?, ?, ?, ?)";
+                          VALUES (?, ?, ?, ?)";
         $stmt_details = $conn->prepare($sql_details);
         
+        // Siapkan statement untuk update stok (akan digunakan di dalam loop)
+        $sql_update_stok = "UPDATE products SET stock = stock - ? 
+                            WHERE product_id = ? AND stock >= ?";
+        $stmt_stok = $conn->prepare($sql_update_stok);
+
         foreach ($cart_items as $item) {
+            // Masukkan ke order_details
             $stmt_details->bind_param("iiid", $order_id, $item['product_id'], $item['quantity'], $item['price']);
             $stmt_details->execute();
+
+            // --- ▼▼▼ INI KODE TAMBAHAN UNTUK MENGURANGI STOK ▼▼▼ ---
+            
+            // Kurangi stok
+            // bind_param("iii"): (kurangi berapa, untuk id berapa, HANYA JIKA stok >= dari berapa)
+            $stmt_stok->bind_param("iii", $item['quantity'], $item['product_id'], $item['quantity']);
+            $stmt_stok->execute();
+            
+            // Cek apakah stok berhasil dikurangi
+            if ($stmt_stok->affected_rows === 0) {
+                // Jika affected_rows = 0, berarti stok tidak cukup (WHERE stock >= ? gagal)
+                // Kita paksa error agar transaksi di-rollback
+                throw new Exception("Stok tidak mencukupi untuk produk ID: " . $item['product_id']);
+            }
+            // --- ▲▲▲ SELESAI KODE TAMBAHAN ▲▲▲ ---
         }
         $stmt_details->close();
+        $stmt_stok->close(); // Jangan lupa tutup statement stok
 
         // --- Langkah C: Kosongkan keranjang 'cart_items' ---
         $sql_clear_cart = "DELETE FROM cart_items WHERE user_id = ?";
@@ -130,9 +152,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $pdf->Cell(30, 8, 'Rp ' . number_format($total_amount), 1, 0, 'R');
         $pdf->Ln();
         
-        // *** PERUBAHAN DI SINI ***
         // Simpan file PDF ke folder 'invoices'
-        $folder_invoice = __DIR__ . '/invoices/'; // Path absolut ke C:\...\tokokesehatan\invoices\
+        $folder_invoice = __DIR__ . '/invoices/'; 
         $nama_file_pdf = "invoice_order_" . $order_id . ".pdf";
         $path_lengkap_file = $folder_invoice . $nama_file_pdf;
         
@@ -140,15 +161,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // --- 5. Redirect ke Halaman Sukses ---
         
-        // *** PERUBAHAN DI SINI ***
-        // Kirim path relatif 'invoices/' di URL
         header("Location: order_sukses.php?order_id=" . $order_id . "&pdf=invoices/" . $nama_file_pdf);
         exit();
 
-    } catch (mysqli_sql_exception $exception) {
-        // --- Langkah E: Jika ada error, rollback (batalkan) semua ---
+    } catch (Exception $exception) { // Menangkap semua jenis Exception
+        // --- Langkah E: Jika ada error (termasuk stok), rollback ---
         $conn->rollback();
-        echo "Error: Gagal memproses pesanan. " . $exception->getMessage();
+        
+        // Kirim user kembali ke keranjang dengan pesan error
+        $error_message = urlencode($exception->getMessage());
+        if (strpos($error_message, 'Stok tidak mencukupi') !== false) {
+             header("Location: keranjang.php?error=Stok tidak mencukupi untuk salah satu barang.");
+        } else {
+             header("Location: keranjang.php?error=Gagal memproses pesanan: " . $error_message);
+        }
+        exit();
     }
     
     $conn->close();

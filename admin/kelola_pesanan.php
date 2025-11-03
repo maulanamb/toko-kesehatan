@@ -1,12 +1,7 @@
 <?php
-// 1. Panggil "Satpam"
-require_once 'admin_check.php';
+require_once 'cek_admin.php'; 
+require_once '../koneksi.php'; 
 
-// 2. Panggil koneksi (naik satu level)
-require_once '../koneksi.php';
-
-// 3. Ambil semua data pesanan, gabung (JOIN) dengan nama user
-// Gunakan LEFT JOIN untuk jaga-jaga jika user dihapus, ordernya tetap ada
 $sql = "SELECT 
             o.order_id, 
             o.order_date, 
@@ -20,7 +15,7 @@ $sql = "SELECT
         ORDER BY 
             o.order_date DESC";
         
-$result = $conn->query($sql);
+$result = $conn->query($sql); 
 $orders = $result->fetch_all(MYSQLI_ASSOC);
 $conn->close();
 ?>
@@ -50,9 +45,10 @@ $conn->close();
         <h2>Admin Panel</h2>
         <ul>
             <li><a href="index.php">Dashboard</a></li>
-            <li><a href="manage_orders.php">Kelola Pesanan</a></li>
-            <li><a href="manage_products.php">Kelola Produk</a></li>
-            <li><a href="manage_users.php">Kelola Pengguna</a></li>
+            <li><a href="kelola_pesanan.php">Kelola Pesanan</a></li>
+            <li><a href="kelola_kategori.php">Kelola Kategori</a></li>
+            <li><a href="kelola_produk.php">Kelola Produk</a></li>
+            <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
         </ul>
     </div>
 
@@ -83,7 +79,7 @@ $conn->close();
                             <td>Rp <?php echo number_format($order['total_amount'], 0, ',', '.'); ?></td>
                             <td><?php echo htmlspecialchars($order['status']); ?></td>
                             <td>
-                                <a href="admin_order_detail.php?order_id=<?php echo $order['order_id']; ?>">
+                                <a href="detail_pesanan_admin.php?order_id=<?php echo $order['order_id']; ?>">
                                     Detail & Update Status
                                 </a>
                             </td>
