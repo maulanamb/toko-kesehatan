@@ -62,6 +62,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <li><a href="kelola_kategori.php">Kelola Kategori</a></li>
             <li><a href="kelola_produk.php">Kelola Produk</a></li>
             <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
+            <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li>
+            <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li>
         </ul>
     </div>
 

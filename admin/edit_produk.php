@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once 'cek_admin.php'; 
-require_once '../koneksi.php'; 
+// require_once 'cek_admin.php'; // Pastikan satpam aktif
+require_once '../koneksi.php'; // Pastikan $conn
 
 $pesan_error = "";
 $pesan_sukses = "";
@@ -61,19 +61,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     WHERE 
                         product_id = $product_id";
         
-        if ($conn->query($sql_update)) { // <--- Menggunakan $conn
+        if ($conn->query($sql_update)) { 
             header("location: kelola_produk.php?status=edit_sukses");
             exit();
         } else {
-            $pesan_error = "Gagal memperbarui produk: " . $conn->error; // <--- Menggunakan $conn
+            $pesan_error = "Gagal memperbarui produk: " . $conn->error; 
         }
     }
 }
 
 // 2. Logika saat halaman DIBUKA (GET)
-// Ambil data produk yang ada dari database
 $sql_get = "SELECT * FROM products WHERE product_id = $product_id";
-$result = $conn->query($sql_get); // <--- Menggunakan $conn (Ini baris 76)
+$result = $conn->query($sql_get); 
 
 if ($result->num_rows > 0) {
     $product = $result->fetch_assoc();
@@ -84,9 +83,9 @@ if ($result->num_rows > 0) {
 
 // Ambil data kategori untuk dropdown
 $category_query = "SELECT category_id, category_name FROM categories ORDER BY category_name ASC";
-$category_result = $conn->query($category_query); // <--- Menggunakan $conn
+$category_result = $conn->query($category_query); 
 
-$conn->close(); // <--- Menggunakan $conn
+$conn->close(); 
 ?>
 
 <!DOCTYPE html>
@@ -125,9 +124,11 @@ $conn->close(); // <--- Menggunakan $conn
         <ul>
             <li><a href="index.php">Dashboard</a></li>
             <li><a href="kelola_pesanan.php">Kelola Pesanan</a></li>
-            <li><a href="manage_kategori.php">Kelola Kategori</a></li>
+            <li><a href="kelola_kategori.php">Kelola Kategori</a></li>
             <li><a href="kelola_produk.php">Kelola Produk</a></li>
             <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
+            <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li>
+            <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li>
         </ul>
     </div>
 
@@ -172,8 +173,8 @@ $conn->close(); // <--- Menggunakan $conn
 
                 <div class="form-group">
                     <label for="deskripsi">Deskripsi:</label>
-                    <textarea id="deskripsi" name="deskripsi" rows="4"><?php echo htmlspecialchars($product['description']); ?></textarea>
-                </div>
+                    <textarea id="deskripsi" name="deskripsi" rows="4"><?php echo htmlspecialchars($product['description'] ?? ''); ?></textarea>
+                    </div>
 
                 <div class="form-group">
                     <label for="harga">Harga (Rp):</label>

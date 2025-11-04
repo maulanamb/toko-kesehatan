@@ -1,31 +1,16 @@
 <?php
-// Selalu mulai session di baris paling atas
 session_start();
+require_once 'koneksi.php'; // Pastikan file ini menyediakan variabel $conn
 
-// 1. Cek apakah pengguna sudah login
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-// 2. Sertakan file koneksi database
-require_once 'koneksi.php';
-
-// 3. Ambil data pengguna dari session
-$username = $_SESSION['username'];
-$role = $_SESSION['role'];
-
-// 4. Ambil semua data produk dari database
-$sql = "SELECT product_id, product_name, price, image_url FROM products";
+// Ambil semua data produk
+$sql = "SELECT product_id, product_name, price, image_url, stock 
+        FROM products 
+        WHERE stock > 0 
+        ORDER BY product_id DESC";
+        
 $result = $conn->query($sql);
+$products = $result->fetch_all(MYSQLI_ASSOC);
 
-// Kita akan simpan data produk ke dalam array
-$products = [];
-if ($result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        $products[] = $row;
-    }
-}
 $conn->close();
 ?>
 
@@ -33,90 +18,148 @@ $conn->close();
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Produk - Toko Alat Kesehatan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang di Toko Alat Kesehatan</title>
+    
     <style>
-        body { font-family: sans-serif; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid #ccc; }
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 kolom */
-            gap: 20px; /* Jarak antar produk */
+        body { 
+            font-family: sans-serif; 
+            margin: 0; 
+            background-color: #f4f4f4; 
+        }
+        .header {
+            background-color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            text-decoration: none;
+        }
+        .header .nav a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
             padding: 20px;
         }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
         .product-card {
-            border: 1px solid #ccc;
+            background-color: white;
+            border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 15px;
-            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         .product-card img {
-            max-width: 100%;
-            height: 150px;
+            width: 100%;
+            height: 200px;
             object-fit: cover;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 10px;
         }
-        .product-card h3 { margin-top: 0; }
+        .product-card .info {
+            padding: 15px;
+            flex-grow: 1;
+        }
+        .product-card h3 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
         .product-card .price {
+            font-size: 1.1em;
             font-weight: bold;
-            color: #d00;
+            color: #28a745;
             margin-bottom: 10px;
         }
-        .product-card .actions button {
-            margin: 0 5px;
+        .product-card .actions {
+            padding: 15px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .product-card .btn {
             padding: 8px 12px;
-            cursor: pointer;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .btn-detail {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .btn-buy {
+            background-color: #007bff;
+            color: white;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div>
-            Selamat Datang, <strong><?php echo htmlspecialchars($username); ?></strong>!
-            (Role: <?php echo htmlspecialchars($role); ?>)
-        </div>
-        <div>
-            <a href="profil.php" style="margin-right: 15px;">Profil Saya</a>
-            <a href="riwayat_pesanan.php" style="margin-right: 15px;">Riwayat Saya</a>
-            <a href="keranjang.php" style="margin-right: 15px;">🛒 Keranjang Belanja</a>
-            <a href="logout.php">Logout</a>
-        </div>
-    </div>
+    <header class="header">
+        <a href="index.php" class="logo">Toko Kesehatan</a>
+        
+        <nav class="nav">
+            <a href="keranjang.php">Keranjang</a>
+            
+            <?php if (isset($_SESSION['user_id'])): ?>
+                
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
+                    <a href="admin/index.php">Dashboard Admin</a>
+                    <a href="logout.php" style="color: red;">Logout</a>
+                <?php else: ?>
+                    <a href="profil.php">Profil Saya</a>
+                    <a href="riwayat_pesanan.php">Riwayat</a>
+                    <a href="logout.php" style="color: red;">Logout</a>
+                <?php endif; ?>
 
-    <h1>Halaman Produk</h1>
+            <?php else: ?>
+                <a href="buku_tamu.php">Buku Tamu</a>
+                <a href="login.php">Login</a>
+                <a href="registrasi.php">Register</a>
+            <?php endif; ?>
+            
+        </nav>
+    </header>
 
-    <div class="product-grid">
-        <?php
-        // 5. Lakukan looping (perulangan) untuk menampilkan setiap produk
-        if (count($products) > 0):
-            foreach ($products as $product):
-        ?>
-            <div class="product-card">
-                <img src="<?php echo !empty($product['image_url']) ? $product['image_url'] : 'https://via.placeholder.com/150'; ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
-                
-                <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
-                
-                <div class="price">
-                    Rp <?php echo number_format($product['price'], 0, ',', '.'); ?>
-                </div>
-                
-                <div class="actions">
-                    <button>View</button>
-                    <a href="keranjang_tambah.php?id=<?php echo $product['product_id']; ?>">
-                        <button>Buy</button>
-                    </a>
-                </div>
-            </div>
-        <?php
-            endforeach;
-        else:
-            // Tampilkan pesan jika tidak ada produk
-        ?>
-            <p>Belum ada produk yang tersedia.</p>
-        <?php
-        endif;
-        ?>
+    <div class="container">
+        <h2>Produk Kami</h2>
+        
+        <div class="product-grid">
+            <?php if (count($products) > 0): ?>
+                <?php foreach ($products as $product): ?>
+                    <div class="product-card">
+                        <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
+                        <div class="info">
+                            <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
+                            <div class="price">Rp <?php echo number_format($product['price'], 0, ',', '.'); ?></div>
+                            <small>Stok: <?php echo $product['stock']; ?></small>
+                        </div>
+                        <div class="actions">
+                            <a href="detail_produk.php?id=<?php echo $product['product_id']; ?>" class="btn btn-detail">Lihat Detail</a>
+                            
+                            <a href="keranjang_tambah.php?id=<?php echo $product['product_id']; ?>" class="btn btn-buy">Beli</a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p>Belum ada produk untuk ditampilkan.</p>
+            <?php endif; ?>
+        </div>
     </div>
 
 </body>

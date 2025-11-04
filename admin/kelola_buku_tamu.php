@@ -1,17 +1,16 @@
 <?php
-session_start();
-
-require_once 'cek_admin.php'; 
-require_once '../koneksi.php'; 
+require_once 'cek_admin.php'; // Pastikan satpam aktif
+require_once '../koneksi.php'; // Pastikan $conn
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Kelola Kategori - Admin Panel</title>
+    <title>Kelola Buku Tamu - Admin Panel</title>
     
     <style>
+        /* [CSS yang sama dengan file admin lainnya] */
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
@@ -24,16 +23,11 @@ require_once '../koneksi.php';
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
         th { background-color: #f2f2f2; }
-        .btn {
-            display: inline-block;
-            padding: 8px 12px;
-            margin: 20px 0;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        .btn:hover { background-color: #0056b3; }
+        td.pesan { max-width: 400px; word-wrap: break-word; line-height: 1.5; }
+        
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .alert-sukses { background-color: #d4edda; color: #155724; }
+        .alert-gagal { background-color: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
@@ -46,48 +40,60 @@ require_once '../koneksi.php';
             <li><a href="kelola_kategori.php">Kelola Kategori</a></li>
             <li><a href="kelola_produk.php">Kelola Produk</a></li>
             <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
-            <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li>
+            <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li> 
             <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li>
         </ul>
     </div>
 
     <div class="content">
         <div class="header">
-            <h1>Kelola Kategori</h1>
+            <h1>Kelola Buku Tamu</h1>
             <a href="../logout.php">Logout</a>
         </div>
 
-        <a href="tambah_kategori.php" class="btn">Tambah Kategori Baru</a>
+        <?php
+        if(isset($_GET['status'])) {
+            if($_GET['status'] == 'hapus_sukses') {
+                echo "<div class='alert alert-sukses'>Pesan berhasil dihapus.</div>";
+            } else if ($_GET['status'] == 'hapus_gagal') {
+                echo "<div class='alert alert-gagal'>Gagal menghapus pesan.</div>";
+            }
+        }
+        ?>
 
         <table>
             <thead>
                 <tr>
-                    <th>No.</th>
-                    <th>Nama Kategori</th>
+                    <th>ID</th>
+                    <th>Tanggal</th>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Pesan</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                $sql = "SELECT * FROM categories ORDER BY category_name ASC";
+                $sql = "SELECT id, nama, email, pesan, tanggal_kirim FROM buku_tamu ORDER BY tanggal_kirim DESC";
                 $result = $conn->query($sql); 
 
                 if ($result->num_rows > 0) {
-                    $nomor = 1;
                     while ($row = $result->fetch_assoc()) {
                 ?>
                         <tr>
-                            <td><?php echo $nomor++; ?></td>
-                            <td><?php echo htmlspecialchars($row['category_name']); ?></td> 
+                            <td><?php echo $row['id']; ?></td>
+                            <td><?php echo date('d M Y, H:i', strtotime($row['tanggal_kirim'])); ?></td>
+                            <td><?php echo htmlspecialchars($row['nama']); ?></td>
+                            <td><?php echo htmlspecialchars($row['email'] ?? '-'); ?></td>
+                            <td class="pesan"><?php echo nl2br(htmlspecialchars($row['pesan'])); ?></td>
                             <td>
-                                <a href="edit_kategori.php?id=<?php echo $row['category_id']; ?>">Edit</a> | 
-                                <a href="hapus_kategori.php?id=<?php echo $row['category_id']; ?>" onclick="return confirm('Yakin ingin menghapus?');">Hapus</a>
+                                <a href="hapus_buku_tamu.php?id=<?php echo $row['id']; ?>" onclick="return confirm('Yakin ingin menghapus pesan ini?');" style="color: red;">Hapus</a>
                             </td>
                         </tr>
                 <?php
                     }
                 } else {
-                    echo "<tr><td colspan='3' style='text-align: center;'>Belum ada data kategori.</td></tr>";
+                    echo "<tr><td colspan='6' style='text-align: center;'>Belum ada pesan di buku tamu.</td></tr>";
                 }
                 $conn->close(); 
                 ?>
