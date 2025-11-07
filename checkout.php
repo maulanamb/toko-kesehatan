@@ -46,84 +46,141 @@ $stmt_user->close();
 $conn->close();
 
 // Gabungkan alamat
-$alamat_pengiriman = $user['address'] . ", " . $user['city'];
+$alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Toko Alat Kesehatan</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
-        .checkout-container { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .summary, .shipping, .payment { border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
-        h2 { border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 0; }
-        .item { display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding: 5px 0; }
-        .total { font-weight: bold; font-size: 1.2em; text-align: right; margin-top: 10px; }
-    </style>
+    <!-- ▼▼▼ BOOTSTRAP CSS & JS ▼▼▼ -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ▲▲▲ SELESAI ▲▲▲ -->
 </head>
-<body>
+<body class="bg-light">
 
-    <div class="header">
-        <h1>Konfirmasi Pesanan</h1>
-        <div><a href="keranjang.php">Kembali ke Keranjang</a></div>
-    </div>
-
-    <form action="proses_order.php" method="POST">
-        <div class="checkout-container">
-            <div>
-                <div class="summary">
-                    <h2>Ringkasan Pesanan</h2>
-                    <?php foreach ($cart_items as $item): ?>
-                        <div class="item">
-                            <span><?php echo htmlspecialchars($item['product_name']); ?> (x<?php echo $item['quantity']; ?>)</span>
-                            <span>Rp <?php echo number_format($item['subtotal'], 0, ',', '.'); ?></span>
-                        </div>
-                    <?php endforeach; ?>
-                    <div class="total">
-                        Total: Rp <?php echo number_format($total_belanja, 0, ',', '.'); ?>
-                        <input type="hidden" name="total_amount" value="<?php echo $total_belanja; ?>">
-                    </div>
-                </div>
-
-                <br>
-
-                <div class="payment">
-                    <h2>Metode Pembayaran</h2>
-                    <p>(Sesuai dokumen: Prepaid/Postpaid)</p>
-                    <div>
-                        <input type="radio" id="prepaid" name="payment_method" value="Prepaid (Credit Card/PayPal)" checked required>
-                        <label for="prepaid">Prepaid (Credit Card/PayPal)</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="postpaid" name="payment_method" value="Postpaid (Bayar di Tempat)">
-                        <label for="postpaid">Postpaid (Bayar di Tempat / COD)</label>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <div class="shipping">
-                    <h2>Alamat Pengiriman</h2>
-                    <p>
-                        <strong><?php echo htmlspecialchars($username); ?></strong><br>
-                        <?php echo htmlspecialchars($user['contact_no']); ?><br>
-                        <?php echo htmlspecialchars($user['address']); ?><br>
-                        <?php echo htmlspecialchars($user['city']); ?>
-                    </p>
-                    <a href="#">Ubah Alamat</a> <input type="hidden" name="shipping_address" value="<?php echo htmlspecialchars($alamat_pengiriman); ?>">
-                </div>
-                
-                <br>
-                
-                <button type="submit" style="width: 100%; padding: 15px; font-size: 1.2em; background-color: #28a745; color: white; border: none; cursor: pointer;">
-                    Bayar & Buat Pesanan
-                </button>
+    <!-- ▼▼▼ NAVBAR BOOTSTRAP BARU ▼▼▼ -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="keranjang.php">Keranjang</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            Halo, <?php echo htmlspecialchars($username); ?>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                            <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                            <!-- ▼▼▼ LINK BARU "BUKA TOKO" ▼▼▼ -->
+                            <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                            <!-- ▲▲▲ SELESAI ▲▲▲ -->
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
-    </form>
+    </nav>
+    <!-- ▲▲▲ SELESAI NAVBAR ▲▲▲ -->
+
+    <!-- ==== KONTEN CHECKOUT ==== -->
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">Konfirmasi Pesanan</h1>
+            <a href="keranjang.php" class="btn btn-outline-primary">&laquo; Kembali ke Keranjang</a>
+        </div>
+        
+        <form action="proses_order.php" method="POST">
+            <div class="row g-4">
+            
+                <!-- KOLOM KIRI: Alamat & Pembayaran -->
+                <div class="col-lg-7">
+                    <!-- Alamat -->
+                    <div class="card shadow-sm mb-4 border-0">
+                        <div class="card-header bg-white py-3">
+                            <h2 class="h5 mb-0">Alamat Pengiriman</h2>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                <strong><?php echo htmlspecialchars($username); ?></strong><br>
+                                <?php echo htmlspecialchars($user['contact_no'] ?? 'No. Kontak belum diatur'); ?><br>
+                                <?php echo htmlspecialchars($user['address'] ?? 'Alamat belum diatur'); ?><br>
+                                <?php echo htmlspecialchars($user['city'] ?? ''); ?>
+                            </p>
+                            <a href="profil.php">Ubah Alamat di Profil</a>
+                            <!-- Hidden input untuk alamat -->
+                            <input type="hidden" name="shipping_address" value="<?php echo htmlspecialchars($alamat_pengiriman); ?>">
+                        </div>
+                    </div>
+                    
+                    <!-- Metode Pembayaran -->
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3">
+                            <h2 class="h5 mb-0">Metode Pembayaran</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input type="radio" id="prepaid" name="payment_method" value="Prepaid (Credit Card/PayPal)" class="form-check-input" checked required>
+                                <label for="prepaid" class="form-check-label">Prepaid (Credit Card/PayPal)</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" id="postpaid" name="payment_method" value="Postpaid (Bayar di Tempat)" class="form-check-input">
+                                <label for="postpaid" class="form-check-label">Postpaid (Bayar di Tempat / COD)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KOLOM KANAN: Ringkasan & Tombol Bayar -->
+                <div class="col-lg-5">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3">
+                            <h2 class="h5 mb-0">Ringkasan Pesanan</h2>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <?php foreach ($cart_items as $item): ?>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <?php echo htmlspecialchars($item['product_name']); ?>
+                                        <small class="d-block text-muted">Jumlah: <?php echo $item['quantity']; ?></small>
+                                    </div>
+                                    <span class="text-nowrap">Rp <?php echo number_format($item['subtotal'], 0, ',', '.'); ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <div class="card-footer bg-white fs-5 fw-bold d-flex justify-content-between">
+                            <span>Total:</span>
+                            <span>Rp <?php echo number_format($total_belanja, 0, ',', '.'); ?></span>
+                            <!-- Hidden input untuk total -->
+                            <input type="hidden" name="total_amount" value="<?php echo $total_belanja; ?>">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-lg w-100 mt-4">
+                        Bayar & Buat Pesanan
+                    </button>
+                </div>
+                
+            </div>
+        </form>
+    </div>
 
 </body>
 </html>

@@ -7,7 +7,7 @@ require_once '../koneksi.php'; // Pastikan $conn
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Kelola Umpan Balik - Admin Panel</title>
+    <title>Kelola Toko (Vendor) - Admin Panel</title>
     
     <style>
         /* [CSS yang sama dengan file admin lainnya] */
@@ -23,8 +23,11 @@ require_once '../koneksi.php'; // Pastikan $conn
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
         th { background-color: #f2f2f2; }
-        td.komentar { max-width: 400px; word-wrap: break-word; line-height: 1.5; }
-        .rating { color: #f0ad4e; font-size: 1.2em; }
+        .status-pending { color: #orange; font-weight: bold; }
+        .status-approved { color: green; font-weight: bold; }
+        .status-rejected { color: red; font-weight: bold; }
+        .btn-approve { color: green; text-decoration: none; }
+        .btn-reject { color: red; text-decoration: none; margin-left: 10px; }
         
         .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
         .alert-sukses { background-color: #d4edda; color: #155724; }
@@ -38,27 +41,28 @@ require_once '../koneksi.php'; // Pastikan $conn
         <ul>
             <li><a href="index.php">Dashboard</a></li>
             <li><a href="kelola_pesanan.php">Kelola Pesanan</a></li>
-            <li><a href="kelola_kategori.php">Kelola Kategori</a></li>
+            <li><a href="manage_kategori.php">Kelola Kategori</a></li>
             <li><a href="kelola_produk.php">Kelola Produk</a></li>
             <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
             <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li>
-            <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li> </ul>
             <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li>
-            <li><a href="kelola_toko.php">Kelola Toko</a></li>
+            <li><a href="kelola_toko.php">Kelola Toko</a></li> </ul>
     </div>
 
     <div class="content">
         <div class="header">
-            <h1>Kelola Umpan Balik (Review)</h1>
+            <h1>Kelola Toko (Vendor)</h1>
             <a href="../logout.php">Logout</a>
         </div>
 
         <?php
         if(isset($_GET['status'])) {
-            if($_GET['status'] == 'hapus_sukses') {
-                echo "<div class='alert alert-sukses'>Umpan balik berhasil dihapus.</div>";
-            } else if ($_GET['status'] == 'hapus_gagal') {
-                echo "<div class='alert alert-gagal'>Gagal menghapus umpan balik.</div>";
+            if($_GET['status'] == 'approve_sukses') {
+                echo "<div class='alert alert-sukses'>Toko berhasil disetujui.</div>";
+            } else if ($_GET['status'] == 'reject_sukses') {
+                echo "<div class='alert alert-sukses'>Toko berhasil ditolak.</div>";
+            } else if ($_GET['status'] == 'gagal') {
+                echo "<div class='alert alert-gagal'>Proses gagal: " . htmlspecialchars($_GET['error'] ?? '') . "</div>";
             }
         }
         ?>
@@ -66,22 +70,21 @@ require_once '../koneksi.php'; // Pastikan $conn
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Tanggal</th>
-                    <th>Order ID</th>
-                    <th>Pelanggan</th>
-                    <th>Rating</th>
-                    <th>Komentar</th>
+                    <th>ID Toko</th>
+                    <th>Nama Toko</th>
+                    <th>Pemilik (User)</th>
+                    <th>Tanggal Daftar</th>
+                    <th>Status</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                // Kita JOIN dengan tabel 'users' untuk mendapatkan nama pelanggan
-                $sql = "SELECT f.id, f.order_id, f.rating, f.komentar, f.tanggal_kirim, u.username 
-                        FROM feedback f
-                        JOIN users u ON f.user_id = u.user_id
-                        ORDER BY f.tanggal_kirim DESC";
+                // Kita JOIN dengan tabel 'users' untuk mendapatkan nama pemilik
+                $sql = "SELECT t.toko_id, t.nama_toko, t.status, t.tanggal_daftar, u.username 
+                        FROM toko t
+                        JOIN users u ON t.user_id = u.user_id
+                        ORDER BY t.tanggal_daftar DESC";
                 
                 $result = $conn->query($sql); 
 
@@ -89,26 +92,28 @@ require_once '../koneksi.php'; // Pastikan $conn
                     while ($row = $result->fetch_assoc()) {
                 ?>
                         <tr>
-                            <td><?php echo $row['id']; ?></td>
-                            <td><?php echo date('d M Y', strtotime($row['tanggal_kirim'])); ?></td>
-                            <td><a href="detail_pesanan_admin.php?order_id=<?php echo $row['order_id']; ?>">#<?php echo $row['order_id']; ?></a></td>
+                            <td><?php echo $row['toko_id']; ?></td>
+                            <td><?php echo htmlspecialchars($row['nama_toko']); ?></td>
                             <td><?php echo htmlspecialchars($row['username']); ?></td>
-                            <td class="rating">
-                                <?php 
-                                // Loop untuk menampilkan bintang
-                                echo str_repeat('★', $row['rating']); // Bintang penuh
-                                echo str_repeat('☆', 5 - $row['rating']); // Bintang kosong
-                                ?>
-                            </td>
-                            <td class="komentar"><?php echo nl2br(htmlspecialchars($row['komentar'] ?? 'Tidak ada komentar.')); ?></td>
+                            <td><?php echo date('d M Y', strtotime($row['tanggal_daftar'])); ?></td>
                             <td>
-                                <a href="hapus_umpan_balik.php?id=<?php echo $row['id']; ?>" onclick="return confirm('Yakin ingin menghapus umpan balik ini?');" style="color: red;">Hapus</a>
+                                <span class="status-<?php echo $row['status']; ?>">
+                                    <?php echo ucfirst($row['status']); // Menampilkan 'Pending', 'Approved', 'Rejected' ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($row['status'] == 'pending'): ?>
+                                    <a href="proses_toko.php?id=<?php echo $row['toko_id']; ?>&action=approve" class="btn-approve" onclick="return confirm('Anda yakin ingin MENYETUJUI toko ini?');">Setujui</a>
+                                    <a href="proses_toko.php?id=<?php echo $row['toko_id']; ?>&action=reject" class="btn-reject" onclick="return confirm('Anda yakin ingin MENOLAK toko ini?');">Tolak</a>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
                             </td>
                         </tr>
                 <?php
                     }
                 } else {
-                    echo "<tr><td colspan='7' style='text-align: center;'>Belum ada umpan balik yang masuk.</td></tr>";
+                    echo "<tr><td colspan='6' style='text-align: center;'>Belum ada toko yang mendaftar.</td></tr>";
                 }
                 $conn->close(); 
                 ?>

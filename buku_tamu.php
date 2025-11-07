@@ -42,147 +42,107 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buku Tamu - Toko Kesehatan</title>
-    
-    <style>
-        body { 
-            font-family: sans-serif; 
-            margin: 0; 
-            background-color: #f4f4f4; 
-        }
-        .header {
-            background-color: white;
-            padding: 15px 30px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header .logo {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #333;
-            text-decoration: none;
-        }
-        .header .nav a {
-            margin-left: 20px;
-            text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
-        }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        h1, h2 {
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
-        }
-        
-        /* Style Form */
-        .form-container { padding: 20px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 30px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input[type="text"], .form-group input[type="email"], .form-group textarea { 
-            width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; 
-        }
-        .btn-submit { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-submit:hover { background-color: #0056b3; }
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    </head>
+<body class="bg-light">
 
-        /* Style Notifikasi */
-        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        .alert-sukses { background-color: #d4edda; color: #155724; }
-        .alert-gagal { background-color: #f8d7da; color: #721c24; }
-
-        /* Style Daftar Pesan */
-        .pesan-list { list-style: none; padding: 0; }
-        .pesan-item {
-            border: 1px solid #eee;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 10px;
-            background-color: #f9f9f9;
-        }
-        .pesan-item p { margin: 0; line-height: 1.6; }
-        .pesan-item .meta {
-            font-size: 0.9em;
-            color: #555;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-
-    <header class="header">
-        <a href="index.php" class="logo">Toko Kesehatan</a>
-        
-        <nav class="nav">
-            <a href="keranjang.php">Keranjang</a>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
             
-            <?php if (isset($_SESSION['user_id'])): ?>
-                <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
-                    <a href="admin/index.php">Dashboard Admin</a>
-                <?php else: ?>
-                    <a href="profil.php">Profil Saya</a>
-                    <a href="riwayat_pesanan.php">Riwayat</a>
-                <?php endif; ?>
-                <a href="logout.php" style="color: red;">Logout</a>
-            <?php else: ?>
-                <a href="buku_tamu.php">Buku Tamu</a> <a href="login.php">Login</a>
-                <a href="registrasi.php">Register</a>
-            <?php endif; ?>
-        </nav>
-    </header>
-
-    <div class="container">
-        <h1>Buku Tamu</h1>
-        <p>Silakan tinggalkan pesan atau kesan Anda tentang toko kami.</p>
-
-        <div class="form-container">
-            <h2>Tulis Pesan Baru</h2>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             
-            <?php 
-            if (!empty($pesan_sukses)) echo "<div class='alert alert-sukses'>$pesan_sukses</div>";
-            if (!empty($pesan_error)) echo "<div class='alert alert-gagal'>$pesan_error</div>";
-            ?>
-
-            <form action="buku_tamu.php" method="POST">
-                <div class="form-group">
-                    <label for="nama">Nama Anda:</label>
-                    <input type="text" id="nama" name="nama" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email Anda (Opsional):</label>
-                    <input type="email" id="email" name="email">
-                </div>
-                <div class="form-group">
-                    <label for="pesan">Pesan Anda:</label>
-                    <textarea id="pesan" name="pesan" rows="5" required></textarea>
-                </div>
-                <button type="submit" class="btn-submit">Kirim Pesan</button>
-            </form>
-        </div>
-
-        <h2>Pesan Terbaru</h2>
-        <ul class="pesan-list">
-            <?php if (count($pesan_list) > 0): ?>
-                <?php foreach ($pesan_list as $pesan): ?>
-                    <li class="pesan-item">
-                        <p><?php echo nl2br(htmlspecialchars($pesan['pesan'])); ?></p>
-                        <div class="meta">
-                            Oleh: <strong><?php echo htmlspecialchars($pesan['nama']); ?></strong>
-                            pada <?php echo date('d M Y', strtotime($pesan['tanggal_kirim'])); ?>
-                        </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="keranjang.php">Keranjang</a>
                     </li>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <li style="text-align: center; color: #777;">Belum ada pesan. Jadilah yang pertama!</li>
-            <?php endif; ?>
-        </ul>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="buku_tamu.php">Buku Tamu</a>
+                    </li>
+                    
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
+                            <li class="nav-item"><a class="nav-link" href="admin/index.php">Dashboard Admin</a></li>
+                            <li class="nav-item"><a class="nav-link text-danger" href="logout.php">Logout</a></li>
+                        <?php else: ?>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($_SESSION['username']); ?>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                    <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <li class="nav-item"><a class="nav-link" href="login.php">Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="registrasi.php">Register</a></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="mb-4">Buku Tamu</h1>
+                <p class="lead">Silakan tinggalkan pesan atau kesan Anda tentang toko kami.</p>
 
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0">Tulis Pesan Baru</h2>
+                    </div>
+                    <div class="card-body">
+                        <?php 
+                        if (!empty($pesan_sukses)) echo "<div class='alert alert-success'>$pesan_sukses</div>";
+                        if (!empty($pesan_error)) echo "<div class='alert alert-danger'>$pesan_error</div>";
+                        ?>
+
+                        <form action="buku_tamu.php" method="POST">
+                            <div class="mb-3">
+                                <label for="nama" class="form-label">Nama Anda:</label>
+                                <input type="text" id="nama" name="nama" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Anda (Opsional):</label>
+                                <input type="email" id="email" name="email" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label for="pesan" class="form-label">Pesan Anda:</label>
+                                <textarea id="pesan" name="pesan" class="form-control" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Kirim Pesan</button>
+                        </form>
+                    </div>
+                </div>
+
+                <h2 class="h4 mb-3">Pesan Terbaru</h2>
+                <ul class="list-group">
+                    <?php if (count($pesan_list) > 0): ?>
+                        <?php foreach ($pesan_list as $pesan): ?>
+                            <li class="list-group-item mb-2 border-0 shadow-sm">
+                                <p class="mb-2"><?php echo nl2br(htmlspecialchars($pesan['pesan'])); ?></p>
+                                <small class="text-muted">
+                                    Oleh: <strong><?php echo htmlspecialchars($pesan['nama']); ?></strong>
+                                    pada <?php echo date('d M Y', strtotime($pesan['tanggal_kirim'])); ?>
+                                </small>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li class="list-group-item text-center text-muted">Belum ada pesan. Jadilah yang pertama!</li>
+                    <?php endif; ?>
+                </ul>
+
+            </div>
+        </div>
     </div>
 
 </body>

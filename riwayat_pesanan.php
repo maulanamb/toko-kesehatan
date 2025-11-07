@@ -44,49 +44,10 @@ $pesan_error = $_GET['error'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat Pesanan - Toko Kesehatan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f9f9f9; padding: 20px; }
-        .container { 
-            max-width: 900px; 
-            margin: auto; 
-            background-color: white; 
-            padding: 30px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        h1 { 
-            border-bottom: 2px solid #f0f0f0; 
-            padding-bottom: 10px; 
-        }
-        .nav { 
-            margin-bottom: 20px; 
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        .nav a { 
-            margin-right: 15px; 
-            text-decoration: none; 
-            color: #007bff; 
-            font-weight: bold;
-        }
-        .nav a:hover { text-decoration: underline; }
-        
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 20px; 
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px; 
-            text-align: left; 
-            vertical-align: top;
-        }
-        th { 
-            background-color: #f2f2f2; 
-        }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        
+        /* CSS tambahan untuk status */
         .status { 
             font-weight: bold; 
             padding: 5px 8px;
@@ -94,89 +55,112 @@ $pesan_error = $_GET['error'] ?? '';
             color: white;
             font-size: 0.9em;
         }
-        /* ▼▼▼ PERBAIKAN DI SINI ▼▼▼ */
         .status-paid, .status-diproses, .status-menunggu-pembayaran { background-color: #ffc107; color: #333; }
-        /* ▲▲▲ SELESAI PERBAIKAN ▲▲▲ */
         .status-dikirim { background-color: #007bff; }
         .status-selesai { background-color: #28a745; }
         .status-dibatalkan { background-color: #dc3545; }
-
-        /* Notifikasi */
-        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        .alert-sukses { background-color: #d4edda; color: #155724; }
-        .alert-gagal { background-color: #f8d7da; color: #721c24; }
-        
     </style>
 </head>
-<body>
-    <div class="container">
-        
-        <div class="nav">
-            <a href="index.php">Beranda Toko</a>
-            <a href="keranjang.php">Keranjang</a>
-            <a href="profil.php">Profil Saya</a>
-            <a href="logout.php" style="color: red;">Logout</a>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="keranjang.php">Keranjang</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            Halo, <?php echo htmlspecialchars($username); ?>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                            <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                            <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
-        
-        <h1>Riwayat Pesanan Saya</h1>
-        <p>Selamat datang, <?php echo htmlspecialchars($username); ?>. Berikut adalah semua pesanan Anda.</p>
+    </nav>
+    <div class="container my-5">
+        <h1 class="mb-4">Riwayat Pesanan Saya</h1>
+        <p class="lead">Selamat datang, <?php echo htmlspecialchars($username); ?>. Berikut adalah semua pesanan Anda.</p>
 
         <?php 
-        if (!empty($pesan_sukses)) echo "<div class='alert alert-sukses'>".htmlspecialchars(urldecode($pesan_sukses))."</div>";
-        if (!empty($pesan_error)) echo "<div class='alert alert-gagal'>".htmlspecialchars(urldecode($pesan_error))."</div>";
+        if (!empty($pesan_sukses)) echo "<div class='alert alert-success'>".htmlspecialchars(urldecode($pesan_sukses))."</div>";
+        if (!empty($pesan_error)) echo "<div class='alert alert-danger'>".htmlspecialchars(urldecode($pesan_error))."</div>";
         ?>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>No. Order</th>
-                    <th>Tanggal</th>
-                    <th>Total Bayar</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (count($orders) > 0): ?>
-                    <?php foreach ($orders as $order): ?>
-                        <tr>
-                            <td>#<?php echo $order['order_id']; ?></td>
-                            <td><?php echo date('d M Y, H:i', strtotime($order['order_date'])); ?></td>
-                            <td>Rp <?php echo number_format($order['total_amount'], 0, ',', '.'); ?></td>
-                            <td>
-                                <?php 
-                                $status_text = htmlspecialchars($order['status']);
-                                // Mengubah "Paid" -> "paid"
-                                $status_class = strtolower(str_replace(' ', '-', $status_text));
-                                echo "<span class='status status-{$status_class}'>{$status_text}</span>";
-                                ?>
-                            </td>
-                            <td>
-                                <a href="detail_pesanan.php?order_id=<?php echo $order['order_id']; ?>">Lihat Detail</a>
-                                
-                                <?php if ($order['status'] == 'Selesai' && is_null($order['feedback_id'])): ?>
-                                    <br> | <a href="beri_umpan_balik.php?order_id=<?php echo $order['order_id']; ?>" style="color:green;">Beri Ulasan</a>
-                                <?php elseif (!is_null($order['feedback_id'])): ?>
-                                    <br> <small style="color:#777;">(Sudah diulas)</small>
-                                <?php endif; ?>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No. Order</th>
+                                <th>Tanggal</th>
+                                <th>Total Bayar</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($orders) > 0): ?>
+                                <?php foreach ($orders as $order): ?>
+                                    <tr>
+                                        <td><strong>#<?php echo $order['order_id']; ?></strong></td>
+                                        <td><?php echo date('d M Y, H:i', strtotime($order['order_date'])); ?></td>
+                                        <td>Rp <?php echo number_format($order['total_amount'], 0, ',', '.'); ?></td>
+                                        <td>
+                                            <?php 
+                                            $status_text = htmlspecialchars($order['status']);
+                                            $status_class = strtolower(str_replace(' ', '-', $status_text));
+                                            echo "<span class='status status-{$status_class}'>{$status_text}</span>";
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <a href="detail_pesanan.php?order_id=<?php echo $order['order_id']; ?>" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                                            
+                                            <?php if ($order['status'] == 'Selesai' && is_null($order['feedback_id'])): ?>
+                                                <a href="beri_umpan_balik.php?order_id=<?php echo $order['order_id']; ?>" class="btn btn-sm btn-outline-success mt-1">Beri Ulasan</a>
+                                            <?php elseif (!is_null($order['feedback_id'])): ?>
+                                                <small class="d-block text-muted mt-1">(Sudah diulas)</small>
+                                            <?php endif; ?>
 
-                                <?php if ($order['status'] == 'Menunggu Pembayaran' || $order['status'] == 'Diproses' || $order['status'] == 'Paid'): ?>
-                                    <br> | <a href="batal_pesanan.php?order_id=<?php echo $order['order_id']; ?>" 
-                                            style="color:red;" 
-                                            onclick="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini? Stok akan dikembalikan.');">
-                                            Batalkan Pesanan
-                                           </a>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="5" style="text-align: center;">Anda belum memiliki riwayat pesanan.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                                            <?php if ($order['status'] == 'Menunggu Pembayaran' || $order['status'] == 'Diproses' || $order['status'] == 'Paid'): ?>
+                                                <a href="batal_pesanan.php?order_id=<?php echo $order['order_id']; ?>" 
+                                                        class="btn btn-sm btn-outline-danger mt-1" 
+                                                        onclick="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini? Stok akan dikembalikan.');">
+                                                        Batalkan
+                                                </a>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Anda belum memiliki riwayat pesanan.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

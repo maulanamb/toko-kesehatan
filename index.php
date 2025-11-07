@@ -124,6 +124,8 @@ $conn->close();
                 <?php else: ?>
                     <a href="profil.php">Profil Saya</a>
                     <a href="riwayat_pesanan.php">Riwayat</a>
+                    
+                    <a href="buka_toko.php">Buka Toko</a>
                     <a href="logout.php" style="color: red;">Logout</a>
                 <?php endif; ?>
 

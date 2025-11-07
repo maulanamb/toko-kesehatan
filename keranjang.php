@@ -54,105 +54,122 @@ $conn->close();
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Keranjang Belanja - Toko Alat Kesehatan</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #000;
-            padding: 8px 12px;
-            text-align: left;
-        }
-        th { background-color: #f2f2f2; }
-        .total-row { font-weight: bold; }
-        .text-right { text-align: right; }
-        .input-qty { width: 60px; text-align: center; }
-        .cart-actions { margin-top: 20px; display: flex; justify-content: space-between; }
-    </style>
-</head>
-<body>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    </head>
+<body class="bg-light">
 
-    <div class="header">
-        <div>
-            Selamat Datang, <strong><?php echo htmlspecialchars($username); ?></strong>!
-        </div>
-        <div>
-            <a href="index.php" style="margin-right: 15px;">Kembali ke Produk</a>
-            <a href="logout.php">Logout</a>
-        </div>
-    </div>
-
-    <h1>Keranjang Belanja</h1>
-
-    <form action="keranjang_update.php" method="POST">
-        <table>
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Nama Produk dengan IDnya</th>
-                    <th>Jumlah</th>
-                    <th>Harga</th>
-                    <th>Subtotal</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (count($cart_items) > 0): ?>
-                    <?php $nomor = 1; ?>
-                    <?php foreach ($cart_items as $item): ?>
-                        <tr>
-                            <td><?php echo $nomor++; ?></td>
-                            <td>
-                                <?php echo htmlspecialchars($item['product_name']); ?> 
-                                (<?php echo htmlspecialchars($item['product_code']); ?>)
-                            </td>
-                            
-                            <td>
-                                <input type="number" 
-                                       class="input-qty" 
-                                       name="quantity[<?php echo $item['product_id']; ?>]" 
-                                       value="<?php echo $item['quantity']; ?>" 
-                                       min="0">
-                            </td>
-
-                            <td class="text-right">Rp <?php echo number_format($item['price'], 0, ',', '.'); ?></td>
-                            <td class="text-right">Rp <?php echo number_format($item['subtotal'], 0, ',', '.'); ?></td>
-                            <td>
-                                <a href="keranjang_hapus.php?id=<?php echo $item['product_id']; ?>" onclick="return confirm('Hapus item ini?');">Hapus</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    
-                    <tr class="total-row">
-                        <td colspan="4">Total belanja (termasuk pajak):</td>
-                        <td class="text-right">Rp <?php echo number_format($total_belanja, 0, ',', '.'); ?></td>
-                        <td></td>
-                    </tr>
-                
-                <?php else: ?>
-                    <tr>
-                        <td colspan="6" style="text-align: center;">Keranjang belanja Anda kosong.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-
-        <div class="cart-actions">
-            <button type="submit" name="update_cart" style="padding: 10px 20px;">
-                🔄 Update Keranjang
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
             </button>
             
-            <a href="checkout.php" style="text-decoration: none;">
-                <button type="button" style="padding: 10px 20px; font-size: 16px; background-color: #28a745; color: white; border: none; cursor: pointer;">
-                    Lanjut ke Checkout
-                </button>
-            </a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="keranjang.php">Keranjang</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            Halo, <?php echo htmlspecialchars($username); ?>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                            <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                            <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </form>
-    </body>
+    </nav>
+    <div class="container my-5">
+        <h1 class="mb-4">Keranjang Belanja</h1>
+        
+        <form action="keranjang_update.php" method="POST">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="ps-4">No.</th>
+                                    <th scope="col" style="min-width: 250px;">Nama Produk</th>
+                                    <th scope="col" style="width: 120px;">Jumlah</th>
+                                    <th scope="col">Harga</th>
+                                    <th scope="col">Subtotal</th>
+                                    <th scope="col" class="pe-4">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (count($cart_items) > 0): ?>
+                                    <?php $nomor = 1; ?>
+                                    <?php foreach ($cart_items as $item): ?>
+                                        <tr>
+                                            <td class="ps-4"><?php echo $nomor++; ?></td>
+                                            <td>
+                                                <strong><?php echo htmlspecialchars($item['product_name']); ?></strong>
+                                                <small class="d-block text-muted">(<?php echo htmlspecialchars($item['product_code']); ?>)</small>
+                                            </td>
+                                            <td>
+                                                <input type="number" 
+                                                       class="form-control form-control-sm" 
+                                                       style="width: 80px;"
+                                                       name="quantity[<?php echo $item['product_id']; ?>]" 
+                                                       value="<?php echo $item['quantity']; ?>" 
+                                                       min="0">
+                                            </td>
+                                            <td class="text-nowrap">Rp <?php echo number_format($item['price'], 0, ',', '.'); ?></td>
+                                            <td class="text-nowrap">Rp <?php echo number_format($item['subtotal'], 0, ',', '.'); ?></td>
+                                            <td class="pe-4">
+                                                <a href="keranjang_hapus.php?id=<?php echo $item['product_id']; ?>" 
+                                                   class="btn btn-sm btn-outline-danger"
+                                                   onclick="return confirm('Hapus item ini?');">Hapus</a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    
+                                    <tr class="table-light">
+                                        <td colspan="4" class="text-end fw-bold">Total belanja (termasuk pajak):</td>
+                                        <td class="fw-bold fs-5 text-nowrap">Rp <?php echo number_format($total_belanja, 0, ',', '.'); ?></td>
+                                        <td class="pe-4"></td>
+                                    </tr>
+                                
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted p-5">Keranjang belanja Anda kosong.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <?php if (count($cart_items) > 0): ?>
+                <div class="card-footer bg-white p-3 d-flex justify-content-between align-items-center">
+                    <button type="submit" name="update_cart" class="btn btn-outline-secondary">
+                        🔄 Update Keranjang
+                    </button>
+                    
+                    <a href="checkout.php" class="btn btn-success btn-lg">
+                        Lanjut ke Checkout &raquo;
+                    </a>
+                </div>
+                <?php endif; ?>
+            </div>
+        </form>
+    </div>
+
+</body>
 </html>

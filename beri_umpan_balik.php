@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role
     exit();
 }
 $user_id = $_SESSION['user_id'];
+$username = $_SESSION['username']; // Ambil username untuk navbar
 
 // 2. Ambil ID Pesanan dari URL
 $order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
@@ -17,15 +18,12 @@ if ($order_id === 0) {
 }
 
 // 3. Cek Keamanan: Pastikan pesanan ini milik user yang login DAN statusnya "Selesai"
-// ▼▼▼ PERBAIKAN DI SINI (Baris 21) ▼▼▼
 $sql_cek = "SELECT order_id FROM orders WHERE order_id = ? AND user_id = ? AND status = 'Selesai'";
-// ▲▲▲ SELESAI PERBAIKAN ▲▲▲
 $stmt_cek = $conn->prepare($sql_cek);
 $stmt_cek->bind_param("ii", $order_id, $user_id);
 $stmt_cek->execute();
 $result_cek = $stmt_cek->get_result();
 if ($result_cek->num_rows == 0) {
-    // Jika pesanan tidak ditemukan, bukan milik user, atau belum selesai
     header('location: riwayat_pesanan.php?error=Pesanan tidak valid atau belum selesai.');
     exit();
 }
@@ -50,11 +48,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $rating = (int)$_POST['rating'];
     $komentar = $conn->real_escape_string($_POST['komentar']);
     
-    // Validasi rating
     if ($rating < 1 || $rating > 5) {
         $pesan_error = "Silakan pilih rating bintang 1 sampai 5.";
     } else {
-        // Simpan ke database
         $sql_insert = "INSERT INTO feedback (order_id, user_id, rating, komentar) VALUES (?, ?, ?, ?)";
         $stmt_insert = $conn->prepare($sql_insert);
         $stmt_insert->bind_param("iiis", $order_id, $user_id, $rating, $komentar);
@@ -78,44 +74,9 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beri Umpan Balik - Pesanan #<?php echo $order_id; ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f9f9f9; padding: 20px; }
-        .container { 
-            max-width: 600px; 
-            margin: auto; 
-            background-color: white; 
-            padding: 30px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        h1 { border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
-        .nav { 
-            margin-bottom: 20px; 
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        .nav a { 
-            margin-right: 15px; 
-            text-decoration: none; 
-            color: #007bff; 
-            font-weight: bold;
-        }
-        
-        /* Form */
-        form { margin-top: 20px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group textarea { 
-            width: 100%; 
-            padding: 8px; 
-            box-sizing: border-box; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            height: 120px;
-        }
-        .btn-submit { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .alert-gagal { color: red; background-color: #f8d7da; border: 1px solid red; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        
         /* Rating Bintang */
         .rating-stars {
             display: inline-block;
@@ -139,38 +100,77 @@ $conn->close();
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="nav">
-            <a href="riwayat_pesanan.php">&laquo; Kembali ke Riwayat Pesanan</a>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="keranjang.php">Keranjang</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            Halo, <?php echo htmlspecialchars($username); ?>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                            <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                            <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
-        
-        <h1>Beri Umpan Balik</h1>
-        <p>Silakan beri ulasan untuk pesanan Anda <strong>#<?php echo $order_id; ?></strong>.</p>
+    </nav>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <a href="riwayat_pesanan.php" class="text-decoration-none mb-3 d-inline-block">&laquo; Kembali ke Riwayat Pesanan</a>
+                        <h1 class="h3 mb-3">Beri Umpan Balik</h1>
+                        <p class="text-muted">Silakan beri ulasan untuk pesanan Anda <strong>#<?php echo $order_id; ?></strong>.</p>
 
-        <?php 
-        if (!empty($pesan_error)) echo "<div class='alert-gagal'>$pesan_error</div>";
-        ?>
+                        <?php 
+                        if (!empty($pesan_error)) echo "<div class='alert alert-danger'>$pesan_error</div>";
+                        ?>
 
-        <form action="beri_umpan_balik.php?order_id=<?php echo $order_id; ?>" method="POST">
-            <div class="form-group">
-                <label>Rating Anda:</label>
-                <div class="rating-stars">
-                    <input type="radio" id="star5" name="rating" value="5" required><label for="star5">★</label>
-                    <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
-                    <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
-                    <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
-                    <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
+                        <form action="beri_umpan_balik.php?order_id=<?php echo $order_id; ?>" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label d-block">Rating Anda:</label>
+                                <div class="rating-stars">
+                                    <input type="radio" id="star5" name="rating" value="5" required><label for="star5">★</label>
+                                    <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
+                                    <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
+                                    <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
+                                    <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="komentar" class="form-label">Komentar Anda (Opsional):</label>
+                                <textarea id="komentar" name="komentar" class="form-control" rows="5" placeholder="Bagaimana pengalaman Anda dengan produk dan layanan kami?"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">Kirim Umpan Balik</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            
-            <div class="form-group">
-                <label for="komentar">Komentar Anda (Opsional):</label>
-                <textarea id="komentar" name="komentar" placeholder="Bagaimana pengalaman Anda dengan produk dan layanan kami?"></textarea>
-            </div>
-            
-            <button type="submit" class="btn-submit">Kirim Umpan Balik</button>
-        </form>
+        </div>
     </div>
 </body>
 </html>

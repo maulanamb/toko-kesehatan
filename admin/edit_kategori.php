@@ -88,6 +88,7 @@ $conn->close();
             <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
             <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li>
             <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li>
+            <li><a href="kelola_toko.php">Kelola Toko</a></li>
         </ul>
     </div>
 

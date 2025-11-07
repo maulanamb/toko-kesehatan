@@ -7,13 +7,13 @@ if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] == 'admin') {
         header("Location: admin/index.php");
     } else {
-        header("Location: index.php");
+        header("Location: index.php"); // Arahkan ke beranda
     }
     exit();
 }
 
 // 2. Memanggil file koneksi
-require_once 'koneksi.php';
+require_once 'koneksi.php'; // Pastikan $conn ada di sini
 
 $pesan_error = "";
 
@@ -47,17 +47,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
                 
-                // *** INI ADALAH PERUBAHANNYA ***
                 // 8. Arahkan (Redirect) berdasarkan ROLE
                 if ($_SESSION['role'] == 'admin') {
-                    // Jika dia admin, kirim ke dashboard admin
                     header("Location: admin/index.php");
                 } else {
-                    // Jika dia customer, kirim ke halaman produk
-                    header("Location: index.php");
+                    header("Location: index.php"); // Arahkan ke beranda
                 }
                 exit();
-                // *** AKHIR PERUBAHAN ***
 
             } else {
                 $pesan_error = "Password yang Anda masukkan salah.";
@@ -76,43 +72,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Toko Alat Kesehatan</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .login-container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; }
-        div { margin-bottom: 10px; }
-        label { display: block; margin-bottom: 5px; }
-        input[type="text"], input[type="password"] {
-            width: 100%; padding: 8px; box-sizing: border-box;
-        }
-        .message-error { color: red; border: 1px solid red; padding: 10px; margin-bottom: 10px; }
-    </style>
+    <!-- ▼▼▼ BOOTSTRAP CSS & JS ▼▼▼ -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ▲▲▲ SELESAI ▲▲▲ -->
 </head>
-<body>
+<body class="bg-light">
 
-    <div class="login-container">
-        <h2>Selamat datang di Toko Alat Kesehatan</h2>
+    <!-- ==== KONTEN LOGIN ==== -->
+    <div class="container">
+        <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
+            <div class="col-md-5 col-lg-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4 p-md-5">
+                        
+                        <div class="text-center mb-4">
+                            <h2 class="h3 fw-bold">Login</h2>
+                            <p class="text-muted">Selamat datang kembali!</p>
+                        </div>
 
-        <?php if (!empty($pesan_error)): ?>
-            <div class="message-error"><?php echo htmlspecialchars($pesan_error); ?></div>
-        <?php endif; ?>
+                        <?php if (!empty($pesan_error)): ?>
+                            <div class="alert alert-danger"><?php echo htmlspecialchars($pesan_error); ?></div>
+                        <?php endif; ?>
 
-        <form action="" method="POST">
-            <div>
-                <label for="username">User ID:</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-            <div>
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <div>
-                <button type="submit">LOGIN</button>
-            </div>
-        </form>
-        
-        <p>Belum punya akun? <a href="registrasi.php">Registrasi di sini</a></p>
-    </div>
-
-</body>
-</html>
+                        <!-- Arahkan action ke login.php -->
+                        <form action="login.php" method="POST">
+                            <div class="mb-3">
+                                <!-- Perbaiki label dari 'User ID:' menjadi 'Username:' -->
+                                <label for="username" class="form-label">Username:</label>
+                                <input type="text" id="username" name="username" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password:</label>
+                                <input type="password" id="password" name="password" class="form-control" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">LOGIN</button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-4">
+                            <p class="text-muted mb-0">Belum punya akun? <a href="registrasi.php">
