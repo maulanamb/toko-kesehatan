@@ -10,7 +10,7 @@ require_once '../koneksi.php'; // Pastikan $conn
     <title>Kelola Toko (Vendor) - Admin Panel</title>
     
     <style>
-        /* [CSS yang sama dengan file admin lainnya] */
+        /* [CSS Anda yang sama] */
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
@@ -23,11 +23,10 @@ require_once '../koneksi.php'; // Pastikan $conn
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
         th { background-color: #f2f2f2; }
-        .status-pending { color: #orange; font-weight: bold; }
+        .status-pending { color: orange; font-weight: bold; }
         .status-approved { color: green; font-weight: bold; }
         .status-rejected { color: red; font-weight: bold; }
-        .btn-approve { color: green; text-decoration: none; }
-        .btn-reject { color: red; text-decoration: none; margin-left: 10px; }
+        .btn-detail { color: #007bff; text-decoration: none; font-weight: bold; }
         
         .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
         .alert-sukses { background-color: #d4edda; color: #155724; }
@@ -46,7 +45,8 @@ require_once '../koneksi.php'; // Pastikan $conn
             <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
             <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li>
             <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li>
-            <li><a href="kelola_toko.php">Kelola Toko</a></li> </ul>
+            <li><a href="kelola_toko.php">Kelola Toko</a></li>
+        </ul>
     </div>
 
     <div class="content">
@@ -80,7 +80,6 @@ require_once '../koneksi.php'; // Pastikan $conn
             </thead>
             <tbody>
                 <?php
-                // Kita JOIN dengan tabel 'users' untuk mendapatkan nama pemilik
                 $sql = "SELECT t.toko_id, t.nama_toko, t.status, t.tanggal_daftar, u.username 
                         FROM toko t
                         JOIN users u ON t.user_id = u.user_id
@@ -98,17 +97,14 @@ require_once '../koneksi.php'; // Pastikan $conn
                             <td><?php echo date('d M Y', strtotime($row['tanggal_daftar'])); ?></td>
                             <td>
                                 <span class="status-<?php echo $row['status']; ?>">
-                                    <?php echo ucfirst($row['status']); // Menampilkan 'Pending', 'Approved', 'Rejected' ?>
+                                    <?php echo ucfirst($row['status']); ?>
                                 </span>
                             </td>
                             <td>
-                                <?php if ($row['status'] == 'pending'): ?>
-                                    <a href="proses_toko.php?id=<?php echo $row['toko_id']; ?>&action=approve" class="btn-approve" onclick="return confirm('Anda yakin ingin MENYETUJUI toko ini?');">Setujui</a>
-                                    <a href="proses_toko.php?id=<?php echo $row['toko_id']; ?>&action=reject" class="btn-reject" onclick="return confirm('Anda yakin ingin MENOLAK toko ini?');">Tolak</a>
-                                <?php else: ?>
-                                    -
-                                <?php endif; ?>
-                            </td>
+                                <a href="detail_toko.php?id=<?php echo $row['toko_id']; ?>" class="btn-detail">
+                                    Lihat Detail & Tindaki
+                                </a>
+                                </td>
                         </tr>
                 <?php
                     }

@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 
-// 2. Cek apakah user ini sudah punya toko atau sedang mendaftar?
+// 2. Cek apakah user ini sudah punya toko
 $sql_cek_toko = "SELECT status FROM toko WHERE user_id = ?";
 $stmt_cek = $conn->prepare($sql_cek_toko);
 $stmt_cek->bind_param("i", $user_id);
@@ -28,14 +28,23 @@ $stmt_cek->close();
 $pesan_error = "";
 $pesan_sukses = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST" && is_null($status_toko)) {
+    // Ambil data baru
     $nama_toko = $conn->real_escape_string($_POST['nama_toko']);
     $deskripsi_toko = $conn->real_escape_string($_POST['deskripsi_toko']);
+    $no_telepon_toko = $conn->real_escape_string($_POST['no_telepon_toko']);
+    $alamat_toko = $conn->real_escape_string($_POST['alamat_toko']);
+    $kota_toko = $conn->real_escape_string($_POST['kota_toko']);
 
-    if (!empty($nama_toko) && !empty($deskripsi_toko)) {
-        // Daftarkan toko baru dengan status 'pending'
-        $sql_insert = "INSERT INTO toko (user_id, nama_toko, deskripsi_toko, status) VALUES (?, ?, ?, 'pending')";
+    if (!empty($nama_toko) && !empty($deskripsi_toko) && !empty($no_telepon_toko) && !empty($alamat_toko)) {
+        // Query INSERT baru dengan kolom tambahan
+        $sql_insert = "INSERT INTO toko (user_id, nama_toko, deskripsi_toko, no_telepon_toko, alamat_toko, kota_toko, status) 
+                       VALUES (?, ?, ?, ?, ?, ?, 'pending')";
         $stmt_insert = $conn->prepare($sql_insert);
-        $stmt_insert->bind_param("iss", $user_id, $nama_toko, $deskripsi_toko);
+        
+        // ▼▼▼ PERBAIKAN DI SINI (Baris 43) ▼▼▼
+        // 'issssss' (7) diubah menjadi 'isssss' (6)
+        $stmt_insert->bind_param("isssss", $user_id, $nama_toko, $deskripsi_toko, $no_telepon_toko, $alamat_toko, $kota_toko);
+        // ▲▲▲ SELESAI PERBAIKAN ▲▲▲
         
         if ($stmt_insert->execute()) {
             $pesan_sukses = "Pendaftaran toko Anda berhasil dikirim! Silakan tunggu persetujuan dari Admin.";
@@ -45,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && is_null($status_toko)) {
         }
         $stmt_insert->close();
     } else {
-        $pesan_error = "Nama toko dan deskripsi tidak boleh kosong.";
+        $pesan_error = "Semua field wajib diisi.";
     }
 }
 
@@ -60,11 +69,7 @@ $conn->close();
     <title>Buka Toko - Toko Kesehatan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .status-box {
-            padding: 2rem;
-            border-radius: 8px;
-            text-align: center;
-        }
+        .status-box { padding: 2rem; border-radius: 8px; text-align: center; }
     </style>
 </head>
 <body class="bg-light">
@@ -81,7 +86,8 @@ $conn->close();
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                         <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
-                        <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li> <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
                     </ul>
                 </li>
@@ -109,6 +115,18 @@ $conn->close();
                                     <input type="text" id="nama_toko" name="nama_toko" class="form-control" required>
                                 </div>
                                 <div class="mb-3">
+                                    <label for="no_telepon_toko" class="form-label">No. Telepon Toko (WhatsApp):</label>
+                                    <input type="text" id="no_telepon_toko" name="no_telepon_toko" class="form-control" placeholder="Contoh: 08123456789" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="alamat_toko" class="form-label">Alamat Lengkap Toko:</label>
+                                    <textarea id="alamat_toko" name="alamat_toko" class="form-control" rows="3" placeholder="Masukkan alamat lengkap toko / pickup" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="kota_toko" class="form-label">Kota:</label>
+                                    <input type="text" id="kota_toko" name="kota_toko" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
                                     <label for="deskripsi_toko" class="form-label">Deskripsi Toko:</label>
                                     <textarea id="deskripsi_toko" name="deskripsi_toko" class="form-control" rows="4" placeholder="Jelaskan tentang toko Anda..." required></textarea>
                                 </div>
@@ -125,7 +143,7 @@ $conn->close();
                             <div class="status-box bg-success-subtle text-success-emphasis">
                                 <h3 class="h4">Toko Anda Telah Disetujui!</h3>
                                 <p class="lead">Selamat! Toko Anda telah disetujui. Anda sekarang adalah seorang Vendor.</p>
-                                <a href="vendor/dashboard.php" class="btn btn-success btn-lg mt-3">Masuk ke Dashboard Vendor</a>
+                                <a href="vendor/index.php" class="btn btn-success btn-lg mt-3">Masuk ke Dashboard Vendor</a>
                             </div>
 
                         <?php elseif ($status_toko == 'rejected'): // 4. Tampilkan status REJECTED ?>

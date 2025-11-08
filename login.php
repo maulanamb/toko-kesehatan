@@ -6,6 +6,8 @@ session_start();
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] == 'admin') {
         header("Location: admin/index.php");
+    } elseif ($_SESSION['role'] == 'vendor') { // <-- Tambahan Pengecekan
+        header("Location: vendor/index.php");
     } else {
         header("Location: index.php"); // Arahkan ke beranda
     }
@@ -47,13 +49,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
                 
-                // 8. Arahkan (Redirect) berdasarkan ROLE
+                // ▼▼▼ TAMBAHAN UNTUK LOGOUT OTOMATIS (Poin 3) ▼▼▼
+                $_SESSION['waktu_terakhir_aktif'] = time(); 
+                // ▲▲▲ SELESAI TAMBAHAN ▲▲▲
+                
+                
+                // ▼▼▼ PERBAIKAN LOGIKA REDIRECT (Poin 1) ▼▼▼
                 if ($_SESSION['role'] == 'admin') {
                     header("Location: admin/index.php");
+                } elseif ($_SESSION['role'] == 'vendor') {
+                    header("Location: vendor/index.php"); // <-- Arahkan vendor ke sini
                 } else {
-                    header("Location: index.php"); // Arahkan ke beranda
+                    header("Location: index.php"); // Arahkan customer ke sini
                 }
                 exit();
+                // ▲▲▲ SELESAI PERBAIKAN ▲▲▲
 
             } else {
                 $pesan_error = "Password yang Anda masukkan salah.";
@@ -74,14 +84,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Toko Alat Kesehatan</title>
-    <!-- ▼▼▼ BOOTSTRAP CSS & JS ▼▼▼ -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- ▲▲▲ SELESAI ▲▲▲ -->
-</head>
+    </head>
 <body class="bg-light">
 
-    <!-- ==== KONTEN LOGIN ==== -->
     <div class="container">
         <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
             <div class="col-md-5 col-lg-4">
@@ -97,10 +104,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="alert alert-danger"><?php echo htmlspecialchars($pesan_error); ?></div>
                         <?php endif; ?>
 
-                        <!-- Arahkan action ke login.php -->
                         <form action="login.php" method="POST">
                             <div class="mb-3">
-                                <!-- Perbaiki label dari 'User ID:' menjadi 'Username:' -->
                                 <label for="username" class="form-label">Username:</label>
                                 <input type="text" id="username" name="username" class="form-control" required>
                             </div>
@@ -114,4 +119,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </form>
                         
                         <div class="text-center mt-4">
-                            <p class="text-muted mb-0">Belum punya akun? <a href="registrasi.php">
+                            <p class="text-muted mb-0">Belum punya akun? <a href="registrasi.php">Daftar di sini</a></p>
+                            <p class="mt-2"><a href="index.php" class="text-decoration-none">&laquo; Kembali ke Beranda</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

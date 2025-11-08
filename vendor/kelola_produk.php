@@ -48,4 +48,79 @@ require_once 'cek_vendor.php';
 
     <div class="content">
         <div class="header">
-            <h1>Kelola Produk Anda
+            <h1>Kelola Produk Anda</h1>
+            <a href="../index.php" target="_blank">Lihat Toko Publik</a>
+        </div>
+
+        <?php
+        if(isset($_GET['status'])) {
+            $status = $_GET['status'];
+            if($status == 'sukses_tambah') echo "<div class='alert alert-sukses'>Produk baru berhasil ditambahkan.</div>";
+            if($status == 'edit_sukses') echo "<div class='alert alert-sukses'>Produk berhasil diperbarui.</div>";
+            if($status == 'hapus_sukses') echo "<div class='alert alert-sukses'>Produk berhasil dihapus.</div>";
+            if($status == 'hapus_gagal') echo "<div class='alert alert-gagal'>Gagal menghapus produk.</div>";
+        }
+        ?>
+
+        <a href="tambah_produk.php" class="btn-tambah">Tambah Produk Baru</a>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Gambar</th>
+                    <th>Nama Produk</th>
+                    <th>Kategori</th>
+                    <th>Harga</th>
+                    <th>Stok</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                // Query JOIN untuk ambil nama kategori
+                // PENTING: "WHERE p.toko_id = ?"
+                $sql = "SELECT 
+                            p.product_id, p.product_name, p.price, p.stock, p.image_url, 
+                            c.category_name 
+                        FROM 
+                            products p 
+                        LEFT JOIN 
+                            categories c ON p.category_id = c.category_id 
+                        WHERE 
+                            p.toko_id = ?  -- Ini adalah filter utama!
+                        ORDER BY 
+                            p.product_id DESC";
+                
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("i", $toko_id_vendor);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                ?>
+                        <tr>
+                            <td><img src="../<?php echo htmlspecialchars($row['image_url']); ?>" alt="" class="product-img"></td>
+                            <td><?php echo htmlspecialchars($row['product_name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['category_name'] ?? 'Tanpa Kategori'); ?></td>
+                            <td>Rp <?php echo number_format($row['price'], 0, ',', '.'); ?></td>
+                            <td><?php echo htmlspecialchars($row['stock']); ?></td>
+                            <td>
+                                <a href="edit_produk.php?id=<?php echo $row['product_id']; ?>">Edit</a> | 
+                                <a href="hapus_produk.php?id=<?php echo $row['product_id']; ?>" onclick="return confirm('Yakin ingin menghapus produk ini?');" style="color:red;">Hapus</a>
+                            </td>
+                        </tr>
+                <?php
+                    }
+                } else {
+                    echo "<tr><td colspan='6' style='text-align: center;'>Anda belum memiliki produk. Silakan 'Tambah Produk Baru'.</td></tr>";
+                }
+                $stmt->close();
+                $conn->close(); 
+                ?>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
