@@ -1,19 +1,32 @@
 <?php
 session_start();
-require_once 'koneksi.php'; // Pastikan file ini menyediakan variabel $conn
 
-// 1. "Satpam" untuk Customer
+// --- LOGIKA LOGOUT OTOMATIS ---
+$batas_waktu = 1800; // 30 menit
+if (isset($_SESSION['waktu_terakhir_aktif'])) {
+    if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
+        session_unset(); session_destroy();
+        header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir.'));
+        exit();
+    }
+}
+$_SESSION['waktu_terakhir_aktif'] = time();
+// --- SELESAI LOGIKA LOGOUT ---
+
+require_once 'koneksi.php'; // Pastikan $conn
+
+// 1. Cek Login
 if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role'] == 'admin')) {
     header("Location: login.php?error=Silakan login sebagai pelanggan.");
     exit();
 }
 
-// 2. Ambil ID Customer
+// 2. Ambil data Customer
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 $role = $_SESSION['role']; // Ambil role
 
-// 3. Ambil data pesanan HANYA untuk user ini
+// 3. Ambil data pesanan
 $sql = "SELECT 
             o.order_id, 
             o.order_date, 
@@ -34,7 +47,6 @@ $orders = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 $conn->close();
 
-// Ambil pesan sukses/error
 $pesan_sukses = $_GET['sukses'] ?? '';
 $pesan_error = $_GET['error'] ?? '';
 ?>
@@ -67,61 +79,45 @@ $pesan_error = $_GET['error'] ?? '';
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
-            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="keranjang.php">Keranjang</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
-                    </li>
-                    
-                    <?php if (isset($_SESSION['user_id'])): // Pasti true di sini ?>
-                        
-                        <?php if ($role == 'admin'): // Cek variabel $role ?>
-                            <li class="nav-item"><a class="nav-link" href="admin/index.php">Dashboard Admin</a></li>
-                            <li class="nav-item"><a class="nav-link text-danger" href="logout.php">Logout</a></li>
-                        
-                        <?php elseif ($role == 'vendor'): ?>
-                            <li class="nav-item"><a class="nav-link" href="vendor/index.php">Dashboard Vendor</a></li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                    Halo, <?php echo htmlspecialchars($username); ?>
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
-                                    <li><a class="dropdown-item active" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
-                                    <li><a class="dropdown-item" href="buka_toko.php">Toko Saya</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
-                                </ul>
-                            </li>
-
-                        <?php else: // JIKA CUSTOMER BIASA ?>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                    Halo, <?php echo htmlspecialchars($username); ?>
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
-                                    <li><a class="dropdown-item active" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
-                                    <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
-                                </ul>
-                            </li>
-                        <?php endif; ?>
-
+                    <li class="nav-item"><a class="nav-link" href="keranjang.php">Keranjang</a></li>
+                    <li class="nav-item"><a class="nav-link" href="buku_tamu.php">Buku Tamu</a></li>
+                    <?php if ($role == 'admin'): ?>
+                        <li class="nav-item"><a class="nav-link" href="admin/index.php">Dashboard Admin</a></li>
+                        <li class="nav-item"><a class="nav-link text-danger" href="logout.php">Logout</a></li>
+                    <?php elseif ($role == 'vendor'): ?>
+                        <li class="nav-item"><a class="nav-link" href="vendor/index.php">Dashboard Vendor</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">Halo, <?php echo htmlspecialchars($username); ?></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                <li><a class="dropdown-item active" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                <li><a class="dropdown-item" href="buka_toko.php">Toko Saya</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                            </ul>
+                        </li>
+                    <?php else: ?>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">Halo, <?php echo htmlspecialchars($username); ?></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                <li><a class="dropdown-item active" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                            </ul>
+                        </li>
                     <?php endif; ?>
                 </ul>
             </div>
         </div>
     </nav>
+
     <div class="container my-5">
         <h1 class="mb-4">Riwayat Pesanan Saya</h1>
         <p class="lead">Selamat datang, <?php echo htmlspecialchars($username); ?>. Berikut adalah semua pesanan Anda.</p>
@@ -167,14 +163,14 @@ $pesan_error = $_GET['error'] ?? '';
                                                 <small class="d-block text-muted mt-1">(Sudah diulas)</small>
                                             <?php endif; ?>
 
-                                            <?php if ($order['status'] == 'Menunggu Pembayaran' || $order['status'] == 'Diproses' || $order['status'] == 'Paid'): ?>
+                                            <?php if ($order['status'] == 'Menunggu Pembayaran' || $order['status'] == 'Paid'): ?>
                                                 <a href="batal_pesanan.php?order_id=<?php echo $order['order_id']; ?>" 
                                                         class="btn btn-sm btn-outline-danger mt-1" 
                                                         onclick="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini? Stok akan dikembalikan.');">
                                                         Batalkan
                                                 </a>
                                             <?php endif; ?>
-                                        </td>
+                                            </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>

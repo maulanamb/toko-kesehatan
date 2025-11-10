@@ -1,6 +1,23 @@
 <?php
 session_start();
 
+// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
+$batas_waktu = 1800; // 30 menit (1800 detik)
+
+if (isset($_SESSION['waktu_terakhir_aktif'])) {
+    if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
+        session_unset();
+        session_destroy();
+        // Arahkan ke login dengan pesan
+        header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
+        exit();
+    }
+}
+// Reset timer setiap kali halaman dimuat
+$_SESSION['waktu_terakhir_aktif'] = time();
+// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
+
+
 // 1. Cek Login
 if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role'] == 'admin')) {
     header("Location: login.php");
@@ -10,6 +27,7 @@ if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role
 require_once 'koneksi.php';
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role']; // Ambil role
 
 // 2. Ambil ID pesanan dari URL
 $order_id = $_GET['order_id'] ?? 0;
@@ -88,18 +106,43 @@ $conn->close();
                         <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
                     </li>
                     
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            Halo, <?php echo htmlspecialchars($username); ?>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
-                            <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
-                            <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
-                        </ul>
-                    </li>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        
+                        <?php if ($role == 'admin'): ?>
+                            <li class="nav-item"><a class="nav-link" href="admin/index.php">Dashboard Admin</a></li>
+                            <li class="nav-item"><a class="nav-link text-danger" href="logout.php">Logout</a></li>
+                        
+                        <?php elseif ($role == 'vendor'): ?>
+                            <li class="nav-item"><a class="nav-link" href="vendor/index.php">Dashboard Vendor</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($username); ?>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                    <li><a class="dropdown-item" href="buka_toko.php">Toko Saya</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+
+                        <?php else: // JIKA CUSTOMER BIASA ?>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($username); ?>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                    <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
+
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
@@ -140,3 +183,42 @@ $conn->close();
         <div class="card shadow-sm">
             <div class="card-header">
                 <h2 class="h5 mb-0">Item yang Dibeli</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Nama Produk (ID)</th>
+                                <th>Jumlah</th>
+                                <th>Harga Saat Beli</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($items as $item): ?>
+                                <?php $subtotal = $item['quantity'] * $item['price_at_purchase']; ?>
+                                <tr>
+                                    <td>
+                                        <?php echo htmlspecialchars($item['product_name']); ?>
+                                        <small class="text-muted d-block">(<?php echo htmlspecialchars($item['product_code']); ?>)</small>
+                                    </td>
+                                    <td><?php echo $item['quantity']; ?></td>
+                                    <td>Rp <?php echo number_format($item['price_at_purchase'], 0, ',', '.'); ?></td>
+                                    <td>Rp <?php echo number_format($subtotal, 0, ',', '.'); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end fw-bold">Total Belanja:</td>
+                                <td class="fw-bold"><strong>Rp <?php echo number_format($order['total_amount'], 0, ',', '.'); ?></strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+    </div>
+
+</body>
+</html>

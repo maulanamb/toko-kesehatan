@@ -1,6 +1,23 @@
 <?php
 session_start();
 
+// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
+$batas_waktu = 1800; // 30 menit (1800 detik)
+
+if (isset($_SESSION['waktu_terakhir_aktif'])) {
+    if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
+        session_unset();
+        session_destroy();
+        // Arahkan ke login dengan pesan
+        header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
+        exit();
+    }
+}
+// Reset timer setiap kali halaman dimuat
+$_SESSION['waktu_terakhir_aktif'] = time();
+// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
+
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -10,6 +27,7 @@ require_once 'koneksi.php';
 
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role']; // Ambil role untuk navigasi
 
 // --- 1. Ambil data keranjang (mirip keranjang.php) ---
 $sql_cart = "SELECT p.product_id, p.product_name, p.price, c.quantity
@@ -55,14 +73,11 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Toko Alat Kesehatan</title>
-    <!-- ▼▼▼ BOOTSTRAP CSS & JS ▼▼▼ -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- ▲▲▲ SELESAI ▲▲▲ -->
-</head>
+    </head>
 <body class="bg-light">
 
-    <!-- ▼▼▼ NAVBAR BOOTSTRAP BARU ▼▼▼ -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
@@ -80,27 +95,47 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
                         <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
                     </li>
                     
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            Halo, <?php echo htmlspecialchars($username); ?>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
-                            <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
-                            <!-- ▼▼▼ LINK BARU "BUKA TOKO" ▼▼▼ -->
-                            <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
-                            <!-- ▲▲▲ SELESAI ▲▲▲ -->
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
-                        </ul>
-                    </li>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        
+                        <?php if ($role == 'admin'): ?>
+                            <li class="nav-item"><a class="nav-link" href="admin/index.php">Dashboard Admin</a></li>
+                            <li class="nav-item"><a class="nav-link text-danger" href="logout.php">Logout</a></li>
+                        
+                        <?php elseif ($role == 'vendor'): ?>
+                            <li class="nav-item"><a class="nav-link" href="vendor/index.php">Dashboard Vendor</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($username); ?>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                    <li><a class="dropdown-item" href="buka_toko.php">Toko Saya</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+
+                        <?php else: // JIKA CUSTOMER BIASA ?>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($username); ?>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                    <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
+
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
     </nav>
-    <!-- ▲▲▲ SELESAI NAVBAR ▲▲▲ -->
-
-    <!-- ==== KONTEN CHECKOUT ==== -->
     <div class="container my-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="mb-0">Konfirmasi Pesanan</h1>
@@ -110,9 +145,7 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
         <form action="proses_order.php" method="POST">
             <div class="row g-4">
             
-                <!-- KOLOM KIRI: Alamat & Pembayaran -->
                 <div class="col-lg-7">
-                    <!-- Alamat -->
                     <div class="card shadow-sm mb-4 border-0">
                         <div class="card-header bg-white py-3">
                             <h2 class="h5 mb-0">Alamat Pengiriman</h2>
@@ -125,12 +158,10 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
                                 <?php echo htmlspecialchars($user['city'] ?? ''); ?>
                             </p>
                             <a href="profil.php">Ubah Alamat di Profil</a>
-                            <!-- Hidden input untuk alamat -->
                             <input type="hidden" name="shipping_address" value="<?php echo htmlspecialchars($alamat_pengiriman); ?>">
                         </div>
                     </div>
                     
-                    <!-- Metode Pembayaran -->
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white py-3">
                             <h2 class="h5 mb-0">Metode Pembayaran</h2>
@@ -148,7 +179,6 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
                     </div>
                 </div>
 
-                <!-- KOLOM KANAN: Ringkasan & Tombol Bayar -->
                 <div class="col-lg-5">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white py-3">
@@ -168,7 +198,6 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
                         <div class="card-footer bg-white fs-5 fw-bold d-flex justify-content-between">
                             <span>Total:</span>
                             <span>Rp <?php echo number_format($total_belanja, 0, ',', '.'); ?></span>
-                            <!-- Hidden input untuk total -->
                             <input type="hidden" name="total_amount" value="<?php echo $total_belanja; ?>">
                         </div>
                     </div>

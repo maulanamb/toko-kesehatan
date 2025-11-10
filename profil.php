@@ -1,7 +1,24 @@
 <?php
 session_start();
 
-// 1. Cek Login
+// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
+$batas_waktu = 1800; // 30 menit (1800 detik)
+
+if (isset($_SESSION['waktu_terakhir_aktif'])) {
+    if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
+        session_unset();
+        session_destroy();
+        // Arahkan ke login dengan pesan
+        header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
+        exit();
+    }
+}
+// Reset timer setiap kali halaman dimuat
+$_SESSION['waktu_terakhir_aktif'] = time();
+// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
+
+
+// 1. Cek Login (Satpam Customer)
 if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role'] == 'admin')) {
     header("Location: login.php?error=Silakan login sebagai pelanggan.");
     exit();
@@ -62,7 +79,7 @@ $pesan_error = $_GET['error'] ?? '';
                         <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
                     </li>
                     
-                    <?php if (isset($_SESSION['user_id'])): // Pasti true di sini, tapi untuk konsistensi ?>
+                    <?php if (isset($_SESSION['user_id'])): ?>
                         
                         <?php if ($role == 'admin'): ?>
                             <li class="nav-item"><a class="nav-link" href="admin/index.php">Dashboard Admin</a></li>

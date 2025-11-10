@@ -1,5 +1,23 @@
 <?php
 session_start();
+
+// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
+$batas_waktu = 1800; // 30 menit (1800 detik)
+
+if (isset($_SESSION['waktu_terakhir_aktif'])) {
+    if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
+        session_unset();
+        session_destroy();
+        // Arahkan ke login dengan pesan
+        header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
+        exit();
+    }
+}
+// Reset timer setiap kali halaman dimuat
+$_SESSION['waktu_terakhir_aktif'] = time();
+// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
+
+
 require_once 'koneksi.php'; // Pastikan $conn
 
 // 1. "Satpam" untuk Customer
@@ -9,6 +27,7 @@ if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role
 }
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role']; // Ambil role
 
 // 2. Cek apakah user ini sudah punya toko
 $sql_cek_toko = "SELECT status FROM toko WHERE user_id = ?";
@@ -41,10 +60,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && is_null($status_toko)) {
                        VALUES (?, ?, ?, ?, ?, ?, 'pending')";
         $stmt_insert = $conn->prepare($sql_insert);
         
-        // ▼▼▼ PERBAIKAN DI SINI (Baris 43) ▼▼▼
-        // 'issssss' (7) diubah menjadi 'isssss' (6)
+        // Perbaikan 'isssss' (6)
         $stmt_insert->bind_param("isssss", $user_id, $nama_toko, $deskripsi_toko, $no_telepon_toko, $alamat_toko, $kota_toko);
-        // ▲▲▲ SELESAI PERBAIKAN ▲▲▲
         
         if ($stmt_insert->execute()) {
             $pesan_sukses = "Pendaftaran toko Anda berhasil dikirim! Silakan tunggu persetujuan dari Admin.";
@@ -68,6 +85,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buka Toko - Toko Kesehatan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         .status-box { padding: 2rem; border-radius: 8px; text-align: center; }
     </style>
@@ -77,24 +95,61 @@ $conn->close();
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="keranjang.php">Keranjang</a></li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                        Halo, <?php echo htmlspecialchars($username); ?>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
-                        <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
-                        <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
-                    </ul>
-                </li>
-            </ul>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="keranjang.php">Keranjang</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
+                    </li>
+                    
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        
+                        <?php if ($role == 'admin'): ?>
+                            <li class="nav-item"><a class="nav-link" href="admin/index.php">Dashboard Admin</a></li>
+                            <li class="nav-item"><a class="nav-link text-danger" href="logout.php">Logout</a></li>
+                        
+                        <?php elseif ($role == 'vendor'): ?>
+                            <li class="nav-item"><a class="nav-link" href="vendor/index.php">Dashboard Vendor</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($username); ?>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                    <li><a class="dropdown-item active" href="buka_toko.php">Toko Saya</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+
+                        <?php else: // JIKA CUSTOMER BIASA ?>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($username); ?>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                    <li><a class="dropdown-item active" href="buka_toko.php">Buka Toko</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
+
+                    <?php endif; ?>
+                </ul>
+            </div>
         </div>
     </nav>
-
     <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-md-8">

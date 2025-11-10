@@ -14,7 +14,7 @@ require_once '../koneksi.php'; // Pastikan $conn
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
-        .sidebar ul { list-style: none; padding: 0; }
+        .sidebar ul { list-style: none; padding: 0; } /* Ini yang menghilangkan bullet point */
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
         .content { flex: 1; padding: 20px; }
@@ -42,11 +42,11 @@ require_once '../koneksi.php'; // Pastikan $conn
             <li><a href="kelola_produk.php">Kelola Produk</a></li>
             <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
             <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li>
-            <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li> </ul>
             <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li>
             <li><a href="kelola_toko.php">Kelola Toko</a></li>
+            <li><a href="laporan.php">Laporan Bulanan</a></li>
+        </ul>
     </div>
-
     <div class="content">
         <div class="header">
             <h1>Kelola Umpan Balik (Review)</h1>
@@ -77,7 +77,11 @@ require_once '../koneksi.php'; // Pastikan $conn
             </thead>
             <tbody>
                 <?php
-                // Kita JOIN dengan tabel 'users' untuk mendapatkan nama pelanggan
+                // Koneksi lagi jika diperlukan
+                if (!isset($conn) || $conn->ping() === false) {
+                    require '../koneksi.php';
+                }
+                
                 $sql = "SELECT f.id, f.order_id, f.rating, f.komentar, f.tanggal_kirim, u.username 
                         FROM feedback f
                         JOIN users u ON f.user_id = u.user_id
@@ -95,7 +99,6 @@ require_once '../koneksi.php'; // Pastikan $conn
                             <td><?php echo htmlspecialchars($row['username']); ?></td>
                             <td class="rating">
                                 <?php 
-                                // Loop untuk menampilkan bintang
                                 echo str_repeat('★', $row['rating']); // Bintang penuh
                                 echo str_repeat('☆', 5 - $row['rating']); // Bintang kosong
                                 ?>

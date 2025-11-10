@@ -1,5 +1,23 @@
 <?php
 session_start();
+
+// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
+$batas_waktu = 1800; // 30 menit (1800 detik)
+
+if (isset($_SESSION['waktu_terakhir_aktif'])) {
+    if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
+        session_unset();
+        session_destroy();
+        // Arahkan ke login dengan pesan
+        header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
+        exit();
+    }
+}
+// Reset timer setiap kali halaman dimuat
+$_SESSION['waktu_terakhir_aktif'] = time();
+// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
+
+
 require_once 'koneksi.php'; // Pastikan file ini menyediakan variabel $conn
 
 // 1. Cek Login

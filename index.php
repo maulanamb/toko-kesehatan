@@ -27,10 +27,12 @@ if ($sort_option == 'harga_asc') {
 $sql_params = [];
 $sql_param_types = "";
 
-// Query dasar
+// Query dasar: Ambil produk yang stoknya > 0 DAN sudah disetujui (toko_id NULL ATAU status toko 'approved')
 $sql_produk = "SELECT p.product_id, p.product_name, p.price, p.image_url, p.stock 
                FROM products p 
-               WHERE p.stock > 0";
+               LEFT JOIN toko t ON p.toko_id = t.toko_id
+               WHERE p.stock > 0 
+               AND (p.toko_id IS NULL OR t.status = 'approved')"; // <-- Filter produk yang 'live'
 
 // Tambahkan filter kategori JIKA dipilih
 if ($kategori_dipilih > 0) {
@@ -137,7 +139,7 @@ $conn->close();
     <div class="container my-5">
         <div class="row">
             
-            <div class="col-lg-3 sidebar-kategori">
+            <div class="col-lg-3 sidebar-kategori mb-4">
                 <h4 class="mb-3">Kategori</h4>
                 <div class="list-group shadow-sm">
                     <a href="index.php?sort=<?php echo $sort_option; ?>" 
@@ -153,16 +155,16 @@ $conn->close();
                 </div>
             </div>
             <div class="col-lg-9">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="mb-0"><?php echo htmlspecialchars($nama_kategori_aktif); ?></h2>
+                <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+                    <h2 class="h5 mb-0"><?php echo htmlspecialchars($nama_kategori_aktif); ?></h2>
                     
-                    <form action="index.php" method="GET" class="d-flex">
+                    <form action="index.php" method="GET" class="d-flex" style="width: 200px;">
                         <?php if ($kategori_dipilih > 0): ?>
                             <input type="hidden" name="kategori" value="<?php echo $kategori_dipilih; ?>">
                         <?php endif; ?>
                         
                         <select name="sort" class="form-select" onchange="this.form.submit()">
-                            <option value="terbaru" <?php echo ($sort_option == 'terbaru') ? 'selected' : ''; ?>>Urutkan (Terbaru)</option>
+                            <option value="terbaru" <?php echo ($sort_option == 'terbaru') ? 'selected' : ''; ?>>Terbaru</option>
                             <option value="harga_asc" <?php echo ($sort_option == 'harga_asc') ? 'selected' : ''; ?>>Harga Terendah</option>
                             <option value="harga_desc" <?php echo ($sort_option == 'harga_desc') ? 'selected' : ''; ?>>Harga Tertinggi</option>
                             <option value="nama_asc" <?php echo ($sort_option == 'nama_asc') ? 'selected' : ''; ?>>Nama (A-Z)</option>
@@ -190,7 +192,7 @@ $conn->close();
                         <?php endforeach; ?>
                     <?php else: ?>
                         <div class="col-12">
-                            <p class="text-center text-muted">Produk tidak ditemukan untuk filter ini.</p>
+                            <p class="text-center text-muted p-5">Produk tidak ditemukan untuk filter ini.</p>
                         </div>
                     <?php endif; ?>
                 </div>

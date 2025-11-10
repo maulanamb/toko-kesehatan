@@ -2,6 +2,23 @@
 // Selalu mulai session
 session_start();
 
+// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
+$batas_waktu = 1800; // 30 menit (1800 detik)
+
+if (isset($_SESSION['waktu_terakhir_aktif'])) {
+    if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
+        session_unset();
+        session_destroy();
+        // Arahkan ke login dengan pesan
+        header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
+        exit();
+    }
+}
+// Reset timer setiap kali halaman dimuat
+$_SESSION['waktu_terakhir_aktif'] = time();
+// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
+
+
 // 1. Cek apakah pengguna sudah login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -14,6 +31,7 @@ require_once 'koneksi.php';
 // 3. Ambil data pengguna dan ID-nya
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role']; // Ambil role untuk navigasi
 
 // 4. Ambil data isi keranjang (JOIN dengan tabel products)
 $sql = "SELECT 
@@ -78,18 +96,43 @@ $conn->close();
                         <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
                     </li>
                     
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            Halo, <?php echo htmlspecialchars($username); ?>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
-                            <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
-                            <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
-                        </ul>
-                    </li>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        
+                        <?php if ($role == 'admin'): ?>
+                            <li class="nav-item"><a class="nav-link" href="admin/index.php">Dashboard Admin</a></li>
+                            <li class="nav-item"><a class="nav-link text-danger" href="logout.php">Logout</a></li>
+                        
+                        <?php elseif ($role == 'vendor'): ?>
+                            <li class="nav-item"><a class="nav-link" href="vendor/index.php">Dashboard Vendor</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($username); ?>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                    <li><a class="dropdown-item" href="buka_toko.php">Toko Saya</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+
+                        <?php else: // JIKA CUSTOMER BIASA ?>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($username); ?>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
+                                    <li><a class="dropdown-item" href="buka_toko.php">Buka Toko</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
+
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>

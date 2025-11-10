@@ -45,12 +45,13 @@ require_once '../koneksi.php'; // Pastikan $conn
         <ul>
             <li><a href="index.php">Dashboard</a></li>
             <li><a href="kelola_pesanan.php">Kelola Pesanan</a></li>
-            <li><a href="manage_kategori.php">Kelola Kategori</a></li>
+            <li><a href="kelola_kategori.php">Kelola Kategori</a></li>
             <li><a href="kelola_produk.php">Kelola Produk</a></li>
             <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
             <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li>
             <li><a href="kelola_umpan_balik.php">Kelola Umpan Balik</a></li>
             <li><a href="kelola_toko.php">Kelola Toko</a></li>
+            <li><a href="laporan.php">Laporan Bulanan</a></li>
         </ul>
     </div>
 
