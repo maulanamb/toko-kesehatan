@@ -49,7 +49,8 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($product['product_name']); ?> - Toko Kesehatan</title>
+    <title><?php echo htmlspecialchars($product['product_name']); ?></title>
+    <link rel="icon" type="image/png" href="images/minilogo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
@@ -62,13 +63,25 @@ $conn->close();
             border-radius: 8px;
             border: 1px solid #eee;
         }
+        .navbar-brand {
+            padding-top: 0; /* Hapus padding-top default */
+            padding-bottom: 0; /* Hapus padding-bottom default */
+            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
+        }
+        .navbar-brand img {
+            height: 80px; /* Ukuran logo yang lebih terlihat */
+            width: auto;
+            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
+        }
     </style>
 </head>
 <body class="bg-light">
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
+            <a class="navbar-brand" href="detail_produk.php">
+                <img src="images/logo.png" alt="Toko Kesehatan Purnama Logo">
+            </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>

@@ -3,49 +3,58 @@ session_start();
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
+// 1. Set variabel khusus halaman
+$page_title = "Edit Kategori";
+
 $pesan_error = "";
 $pesan_sukses = "";
+$kategori_nama = "";
 
-// 1. Logika saat form DISIMPAN (POST)
+// 2. Ambil ID dari URL
+$category_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if ($category_id === 0) {
+    header('location: kelola_kategori.php?status=id_tidak_valid');
+    exit();
+}
+
+// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $category_id = (int)$_POST['category_id'];
-    $category_name = $conn->real_escape_string($_POST['category_name']);
-
-    if (!empty($category_name) && $category_id > 0) {
-        $sql = "UPDATE categories SET category_name = '$category_name' WHERE category_id = $category_id";
+    $nama_kategori_baru = $conn->real_escape_string($_POST['nama_kategori']);
+    
+    if (!empty($nama_kategori_baru)) {
+        $sql_update = "UPDATE categories SET category_name = ? WHERE category_id = ?";
+        $stmt_update = $conn->prepare($sql_update);
+        $stmt_update->bind_param("si", $nama_kategori_baru, $category_id);
         
-        if ($conn->query($sql) === TRUE) {
+        if ($stmt_update->execute()) {
             header("location: kelola_kategori.php?status=edit_sukses");
             exit();
         } else {
             $pesan_error = "Gagal memperbarui kategori: " . $conn->error;
         }
+        $stmt_update->close();
     } else {
         $pesan_error = "Nama kategori tidak boleh kosong.";
     }
 }
 
-// 2. Logika saat halaman DIBUKA (GET)
-// Ambil ID dari URL
-$category_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-if ($category_id === 0) {
-    header('location: manage_kategori.php?status=id_tidak_valid');
-    exit();
-}
+// 4. Logika saat halaman DIBUKA (GET)
+// Ambil data lama untuk ditampilkan di form
+$sql_get = "SELECT category_name FROM categories WHERE category_id = ?";
+$stmt_get = $conn->prepare($sql_get);
+$stmt_get->bind_param("i", $category_id);
+$stmt_get->execute();
+$result_get = $stmt_get->get_result();
 
-// Ambil data lama dari database untuk ditampilkan di form
-$sql = "SELECT category_name FROM categories WHERE category_id = $category_id";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $nama_kategori_sekarang = $row['category_name'];
+if ($result_get->num_rows > 0) {
+    $kategori = $result_get->fetch_assoc();
+    $kategori_nama = $kategori['category_name'];
 } else {
     // Jika ID tidak ditemukan
-    header('location: manage_kategori.php?status=id_tidak_ditemukan');
+    header('location: kelola_kategori.php?status=id_tidak_ditemukan');
     exit();
 }
-
+$stmt_get->close();
 $conn->close();
 ?>
 
@@ -53,7 +62,10 @@ $conn->close();
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Edit Kategori - Admin Panel</title>
+    <title><?php echo htmlspecialchars($page_title); ?> - Admin Panel</title>
+    <link rel="icon" type="image/png" href="../images/minilogo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
         body { font-family: sans-serif; display: flex; margin: 0; }
@@ -63,19 +75,34 @@ $conn->close();
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
         .content { flex: 1; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
         
-        /* Style untuk form */
-        .form-container { max-width: 500px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: white; margin-top: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .btn-submit { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-submit:hover { background-color: #1e7e34; }
-        .btn-kembali { display: inline-block; margin-top: 15px; color: #555; text-decoration: none; }
-        .error { color: red; background-color: #fdd; padding: 10px; border: 1px solid red; margin-bottom: 15px; }
+        .btn-logout {
+            background-color: #dc3545; color: white; padding: 8px 12px;
+            text-decoration: none; border-radius: 5px; font-weight: bold;
+        }
+        .btn-logout:hover { background-color: #bb2d3b; color: white; }
+
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .alert-gagal { background-color: #f8d7da; color: #721c24; }
+
+        /* Style untuk Form */
+        .form-container {
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
     </style>
-    </head>
+</head>
 <body>
 
     <div class="sidebar">
@@ -95,31 +122,31 @@ $conn->close();
 
     <div class="content">
         <div class="header">
-            <h1>Edit Kategori</h1>
-            <a href="../logout.php">Logout</a>
+            <h1><?php echo htmlspecialchars($page_title); ?></h1>
+            <a href="../logout.php" class="btn-logout">LOGOUT</a>
         </div>
 
         <div class="form-container">
             <?php 
             if (!empty($pesan_error)) {
-                echo "<div class='error'>$pesan_error</div>";
+                echo "<div class='alert alert-gagal'>$pesan_error</div>";
             }
             ?>
-
-            <form action="edit_kategori.php" method="POST">
-                <div class="form-group">
-                    <label for="category_name">Nama Kategori:</label>
-                    <input type="text" id="category_name" name="category_name" value="<?php echo htmlspecialchars($nama_kategori_sekarang); ?>" required>
+            
+            <form action="edit_kategori.php?id=<?php echo $category_id; ?>" method="POST">
+                <div class="mb-3">
+                    <label for="nama_kategori" class="form-label">Nama Kategori:</label>
+                    <input type="text" id="nama_kategori" name="nama_kategori" class="form-control" value="<?php echo htmlspecialchars($kategori_nama); ?>" required>
                 </div>
                 
-                <input type="hidden" name="category_id" value="<?php echo $category_id; ?>">
-                
-                <button type="submit" class="btn-submit">Simpan Perubahan</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
             </form>
-
-            <a href="kelola_kategori.php" class="btn-kembali">&laquo; Kembali ke Manajemen Kategori</a>
+            
+            <a href="kelola_kategori.php" class="btn btn-secondary mt-3">Kembali ke Kelola Kategori</a>
         </div>
-    </div>
+        </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

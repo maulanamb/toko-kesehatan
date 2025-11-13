@@ -1,34 +1,61 @@
 <?php
-require_once 'cek_admin.php'; // Pastikan satpam aktif
-require_once '../koneksi.php'; // Pastikan $conn
+// 1. Set variabel khusus halaman
+$page_title = "Kelola Umpan Balik";
+
+// 2. Panggil Satpam & Header
+require_once 'cek_admin.php'; 
+require_once '../koneksi.php'; // Panggil koneksi
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Kelola Umpan Balik - Admin Panel</title>
+    <title><?php echo htmlspecialchars($page_title); ?> - Admin Panel</title>
+    <link rel="icon" type="image/png" href="../images/minilogo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
-        /* [CSS yang sama dengan file admin lainnya] */
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
-        .sidebar ul { list-style: none; padding: 0; } /* Ini yang menghilangkan bullet point */
+        .sidebar ul { list-style: none; padding: 0; }
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
         .content { flex: 1; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
         th { background-color: #f2f2f2; }
-        td.komentar { max-width: 400px; word-wrap: break-word; line-height: 1.5; }
-        .rating { color: #f0ad4e; font-size: 1.2em; }
+        
+        .btn-logout {
+            background-color: #dc3545; color: white; padding: 8px 12px;
+            text-decoration: none; border-radius: 5px; font-weight: bold;
+        }
+        .btn-logout:hover { background-color: #bb2d3b; color: white; }
+
+        .table .btn-sm {
+            margin: 2px;
+        }
+        .text-center {
+            text-align: center !important;
+        }
         
         .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
         .alert-sukses { background-color: #d4edda; color: #155724; }
         .alert-gagal { background-color: #f8d7da; color: #721c24; }
+        
+        .komentar { max-width: 300px; word-wrap: break-word; line-height: 1.5; }
+        .rating { color: #f0ad4e; font-size: 1.2em; }
     </style>
 </head>
 <body>
@@ -47,10 +74,11 @@ require_once '../koneksi.php'; // Pastikan $conn
             <li><a href="laporan.php">Laporan Bulanan</a></li>
         </ul>
     </div>
+
     <div class="content">
         <div class="header">
-            <h1>Kelola Umpan Balik (Review)</h1>
-            <a href="../logout.php">Logout</a>
+            <h1><?php echo htmlspecialchars($page_title); ?></h1>
+            <a href="../logout.php" class="btn-logout">LOGOUT</a>
         </div>
 
         <?php
@@ -63,8 +91,7 @@ require_once '../koneksi.php'; // Pastikan $conn
         }
         ?>
 
-        <table>
-            <thead>
+        <table class="table table-bordered"> <thead>
                 <tr>
                     <th>ID</th>
                     <th>Tanggal</th>
@@ -72,15 +99,12 @@ require_once '../koneksi.php'; // Pastikan $conn
                     <th>Pelanggan</th>
                     <th>Rating</th>
                     <th>Komentar</th>
-                    <th>Aksi</th>
+                    <th class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                // Koneksi lagi jika diperlukan
-                if (!isset($conn) || $conn->ping() === false) {
-                    require '../koneksi.php';
-                }
+                if (!isset($conn) || $conn->ping() === false) { require '../koneksi.php'; }
                 
                 $sql = "SELECT f.id, f.order_id, f.rating, f.komentar, f.tanggal_kirim, u.username 
                         FROM feedback f
@@ -104,10 +128,12 @@ require_once '../koneksi.php'; // Pastikan $conn
                                 ?>
                             </td>
                             <td class="komentar"><?php echo nl2br(htmlspecialchars($row['komentar'] ?? 'Tidak ada komentar.')); ?></td>
-                            <td>
-                                <a href="hapus_umpan_balik.php?id=<?php echo $row['id']; ?>" onclick="return confirm('Yakin ingin menghapus umpan balik ini?');" style="color: red;">Hapus</a>
+                            <td class="text-center">
+                                <a href="hapus_umpan_balik.php?id=<?php echo $row['id']; ?>" class="btn btn-danger btn-sm m-1" onclick="return confirm('Yakin ingin menghapus umpan balik ini?');">
+                                    Hapus
+                                </a>
                             </td>
-                        </tr>
+                            </tr>
                 <?php
                     }
                 } else {

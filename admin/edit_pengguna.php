@@ -1,5 +1,11 @@
 <?php
-require_once 'cek_admin.php'; // Aktifkan satpam!
+session_start();
+
+// 1. Set variabel khusus halaman
+$page_title = "Edit Pengguna";
+
+// 2. Panggil Satpam
+require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
 $pesan_error = "";
@@ -12,7 +18,7 @@ if ($user_id_to_edit === 0) {
     exit();
 }
 
-// 1. Logika saat form DISIMPAN (POST)
+// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $conn->real_escape_string($_POST['username']);
     $email = $conn->real_escape_string($_POST['email']);
@@ -36,27 +42,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Jika password baru diisi, HASH password tersebut
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 $sql = "UPDATE users SET 
-                            username = '$username',
-                            email = '$email',
-                            role = '$role',
-                            password = '$hashed_password'
-                        WHERE user_id = $user_id_to_edit";
+                            username = ?,
+                            email = ?,
+                            role = ?,
+                            password = ?
+                        WHERE user_id = ?";
+                $stmt_update = $conn->prepare($sql);
+                $stmt_update->bind_param("ssssi", $username, $email, $role, $hashed_password, $user_id_to_edit);
             } else {
                 // Jika password dikosongi, JANGAN update password
                 $sql = "UPDATE users SET 
-                            username = '$username',
-                            email = '$email',
-                            role = '$role'
-                        WHERE user_id = $user_id_to_edit";
+                            username = ?,
+                            email = ?,
+                            role = ?
+                        WHERE user_id = ?";
+                $stmt_update = $conn->prepare($sql);
+                $stmt_update->bind_param("sssi", $username, $email, $role, $user_id_to_edit);
             }
 
             // Eksekusi query
-            if ($conn->query($sql) === TRUE) {
+            if ($stmt_update->execute()) {
                 header("location: kelola_pengguna.php?status=edit_sukses");
                 exit();
             } else {
                 $pesan_error = "Gagal memperbarui pengguna: " . $conn->error;
             }
+            $stmt_update->close();
         }
 
     } else {
@@ -64,10 +75,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// 2. Logika saat halaman DIBUKA (GET)
+// 4. Logika saat halaman DIBUKA (GET)
 // Ambil data lama dari database untuk ditampilkan di form
-$sql_get = "SELECT username, email, role FROM users WHERE user_id = $user_id_to_edit";
-$result = $conn->query($sql_get);
+$sql_get = "SELECT username, email, role FROM users WHERE user_id = ?";
+$stmt_get = $conn->prepare($sql_get);
+$stmt_get->bind_param("i", $user_id_to_edit);
+$stmt_get->execute();
+$result = $stmt_get->get_result();
 
 if ($result->num_rows > 0) {
     $user = $result->fetch_assoc();
@@ -76,7 +90,7 @@ if ($result->num_rows > 0) {
     header('location: kelola_pengguna.php?status=id_tidak_ditemukan');
     exit();
 }
-
+$stmt_get->close();
 $conn->close();
 ?>
 
@@ -84,10 +98,12 @@ $conn->close();
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Edit Pengguna - Admin Panel</title>
+    <title><?php echo htmlspecialchars($page_title); ?> - Admin Panel</title>
+    <link rel="icon" type="image/png" href="../images/minilogo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
-        /* [CSS yang sama dengan file admin lainnya] */
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
@@ -95,16 +111,32 @@ $conn->close();
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
         .content { flex: 1; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
         
-        /* Style untuk form */
-        .form-container { max-width: 500px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: white; margin-top: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .btn-submit { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-kembali { display: inline-block; margin-top: 15px; color: #555; text-decoration: none; }
-        .error { color: red; background-color: #fdd; padding: 10px; border: 1px solid red; margin-bottom: 15px; }
+        .btn-logout {
+            background-color: #dc3545; color: white; padding: 8px 12px;
+            text-decoration: none; border-radius: 5px; font-weight: bold;
+        }
+        .btn-logout:hover { background-color: #bb2d3b; color: white; }
+
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .alert-gagal { background-color: #f8d7da; color: #721c24; }
+
+        /* Style untuk Form */
+        .form-container {
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -126,48 +158,51 @@ $conn->close();
 
     <div class="content">
         <div class="header">
-            <h1>Edit Pengguna: <?php echo htmlspecialchars($user['username']); ?></h1>
-            <a href="../logout.php">Logout</a>
+            <h1><?php echo htmlspecialchars($page_title . ': ' . $user['username']); ?></h1>
+            <a href="../logout.php" class="btn-logout">LOGOUT</a>
         </div>
 
         <div class="form-container">
             <?php 
             if (!empty($pesan_error)) {
-                echo "<div class='error'>$pesan_error</div>";
+                echo "<div class='alert alert-gagal'>$pesan_error</div>";
             }
             ?>
 
             <form action="edit_pengguna.php?id=<?php echo $user_id_to_edit; ?>" method="POST">
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username:</label>
+                    <input type="text" id="username" name="username" class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email:</label>
+                    <input type="email" id="email" name="email" class="form-control" value="<?php echo htmlspecialchars($user['email']); ?>" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="role">Role:</label>
-                    <select id="role" name="role" required>
+                <div class="mb-3">
+                    <label for="role" class="form-label">Role:</label>
+                    <select id="role" name="role" class="form-select" required>
                         <option value="customer" <?php echo ($user['role'] == 'customer') ? 'selected' : ''; ?>>Customer</option>
+                        <option value="vendor" <?php echo ($user['role'] == 'vendor') ? 'selected' : ''; ?>>Vendor</option>
                         <option value="admin" <?php echo ($user['role'] == 'admin') ? 'selected' : ''; ?>>Admin</option>
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="password">Password Baru (Opsional):</label>
-                    <input type="password" id="password" name="password">
-                    <small>Biarkan kosong jika tidak ingin mengubah password.</small>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password Baru (Opsional):</label>
+                    <input type="password" id="password" name="password" class="form-control">
+                    <small class="form-text text-muted">Biarkan kosong jika tidak ingin mengubah password.</small>
                 </div>
                 
-                <button type="submit" class="btn-submit">Simpan Perubahan</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
             </form>
 
-            <a href="kelola_pengguna.php" class="btn-kembali">&laquo; Kembali ke Manajemen Pengguna</a>
+            <a href="kelola_pengguna.php" class="btn btn-secondary mt-3">Kembali ke Kelola Pengguna</a>
         </div>
-    </div>
+        </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

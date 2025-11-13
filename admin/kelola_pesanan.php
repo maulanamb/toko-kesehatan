@@ -7,8 +7,8 @@ require_once '../koneksi.php'; // Pastikan $conn
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Kelola Pesanan - Admin Panel</title>
-    
+    <title>Kelola Pesanan</title>
+    <link rel="icon" type="image/png" href="../images/minilogo.png"> <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* [CSS Admin Panel Anda yang sama] */
         body { font-family: sans-serif; display: flex; margin: 0; }
@@ -18,13 +18,20 @@ require_once '../koneksi.php'; // Pastikan $conn
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
         .content { flex: 1; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
         th { background-color: #f2f2f2; }
         
-        /* ▼▼▼ CSS STATUS BARU ▼▼▼ */
+        /* CSS STATUS VENDOR */
         .status-vendor {
             padding: 4px 8px;
             border-radius: 4px;
@@ -35,7 +42,27 @@ require_once '../koneksi.php'; // Pastikan $conn
         .status-pending { background-color: #ffc107; color: #333; }
         .status-approved { background-color: #28a745; }
         .status-rejected { background-color: #dc3545; }
-        /* ▲▲▲ SELESAI CSS ▲▲▲ */
+        
+        /* CSS TOMBOL LOGOUT */
+        .btn-logout {
+            background-color: #dc3545; 
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn-logout:hover {
+            background-color: #bb2d3b; 
+            color: white;
+        }
+
+        /* ▼▼▼ 2. TAMBAHKAN CSS BANTUAN ▼▼▼ */
+        .table .btn-sm {
+            margin: 2px;
+        }
+        /* ▲▲▲ SELESAI ▲▲▲ */
     </style>
 </head>
 <body>
@@ -58,7 +85,7 @@ require_once '../koneksi.php'; // Pastikan $conn
     <div class="content">
         <div class="header">
             <h1>Kelola Pesanan</h1>
-            <a href="../logout.php">Logout</a>
+            <a href="../logout.php" class="btn-logout">LOGOUT</a>
         </div>
 
         <table>
@@ -75,7 +102,7 @@ require_once '../koneksi.php'; // Pastikan $conn
             </thead>
             <tbody>
                 <?php
-                // ▼▼▼ QUERY SQL BARU YANG LEBIH KOMPLEKS ▼▼▼
+                // QUERY SQL ANDA
                 $sql = "SELECT 
                             o.order_id, 
                             o.order_date, 
@@ -96,16 +123,21 @@ require_once '../koneksi.php'; // Pastikan $conn
                             o.order_id, o.order_date, o.total_amount, o.status, u.username
                         ORDER BY 
                             o.order_date DESC";
-                // ▲▲▲ SELESAI QUERY SQL ▲▲▲
                         
                 $result = $conn->query($sql);
-                $orders = $result->fetch_all(MYSQLI_ASSOC);
+                
+                if ($result) {
+                    $orders = $result->fetch_all(MYSQLI_ASSOC);
+                } else {
+                    $orders = [];
+                    echo "<tr><td colspan='7'>Error: " . $conn->error . "</td></tr>";
+                }
                 $conn->close();
                 
                 if (count($orders) > 0):
                     foreach ($orders as $order):
                         
-                        // ▼▼▼ LOGIKA BARU UNTUK MENENTUKAN STATUS VENDOR ▼▼▼
+                        // LOGIKA STATUS VENDOR
                         if ($order['count_rejected'] > 0) {
                             $vendor_status = "Ditolak Vendor";
                             $vendor_class = "status-rejected";
@@ -116,7 +148,6 @@ require_once '../koneksi.php'; // Pastikan $conn
                             $vendor_status = "Disetujui Vendor";
                             $vendor_class = "status-approved";
                         }
-                        // ▲▲▲ SELESAI LOGIKA ▲▲▲
                 ?>
                         <tr>
                             <td>#<?php echo $order['order_id']; ?></td>
@@ -131,10 +162,10 @@ require_once '../koneksi.php'; // Pastikan $conn
                                 </span>
                             </td>
                             <td>
-                                <a href="detail_pesanan_admin.php?order_id=<?php echo $order['order_id']; ?>">
-                                    Detail & Update Status
+                                <a href="detail_pesanan_admin.php?order_id=<?php echo $order['order_id']; ?>" class="btn btn-primary btn-sm">
+                                    Detail & Update
                                 </a>
-                            </td>
+                                </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>

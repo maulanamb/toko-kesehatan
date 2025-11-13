@@ -80,11 +80,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Registrasi - Toko Alat Kesehatan</title>
+    <title>Form Registrasi</title>
+    <link rel="icon" type="image/png" href="images/minilogo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     </head>
-<body class="bg-light">
+<body style="background-image: linear-gradient( 135deg, #007bff, #198754);">
 
     <div class="container">
         <div class="row justify-content-center" style="padding-top: 50px; padding-bottom: 50px;">
@@ -155,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <input type="text" id="paypal_id" name="paypal_id" class="form-control">
                             </div>
                             <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg">Daftar</button>
+                                <button type="submit" class="btn btn-primary btn-lg">DAFTAR</button>
                                 <button type="reset" class="btn btn-outline-secondary">Clear</button>
                             </div>
                         </form>

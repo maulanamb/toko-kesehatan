@@ -2,21 +2,22 @@
 require_once 'cek_admin.php'; // Pastikan satpam aktif
 require_once '../koneksi.php'; // Pastikan $conn
 
+// 1. Set variabel khusus halaman
+$page_title = "Detail Pesanan";
+
 $pesan_error = "";
 $pesan_sukses = "";
 
-// 1. Ambil ID dari URL
+// 2. Ambil ID dari URL
 $order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
 if ($order_id === 0) {
     header('location: kelola_pesanan.php?status=id_tidak_valid');
     exit();
 }
 
-// 2. Logika untuk UPDATE STATUS (Hanya jika di-POST)
+// 3. Logika untuk UPDATE STATUS (Hanya jika di-POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
     $status_baru = $conn->real_escape_string($_POST['status_pesanan']);
-    
-    // Nanti kita akan tambahkan validasi di sini
     
     $sql_update = "UPDATE orders SET status = ? WHERE order_id = ?";
     $stmt_update = $conn->prepare($sql_update);
@@ -31,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
 }
 
 
-// 3. Ambil data pesanan utama (JOIN dengan user)
+// 4. Ambil data pesanan utama (JOIN dengan user)
 $sql_order = "SELECT o.*, u.username, u.email, u.contact_no 
             FROM orders o
             JOIN users u ON o.user_id = u.user_id 
@@ -44,13 +45,15 @@ $result_order = $stmt_order->get_result();
 
 if ($result_order->num_rows > 0) {
     $order = $result_order->fetch_assoc();
+    // Update page title dengan ID
+    $page_title = "Detail Pesanan #" . $order['order_id'];
 } else {
     header('location: kelola_pesanan.php?status=id_tidak_ditemukan');
     exit();
 }
 $stmt_order->close();
 
-// 4. Ambil data item-item pesanan (JOIN dengan produk DAN toko)
+// 5. Ambil data item-item pesanan (JOIN dengan produk DAN toko)
 $sql_items = "SELECT 
                 od.quantity, 
                 od.status_vendor,
@@ -63,7 +66,7 @@ $sql_items = "SELECT
             JOIN 
                 products p ON od.product_id = p.product_id 
             LEFT JOIN 
-                toko t ON p.toko_id = t.toko_id -- LEFT JOIN jika ada produk admin (toko_id = NULL)
+                toko t ON p.toko_id = t.toko_id 
             WHERE 
                 od.order_id = ?";
 
@@ -75,15 +78,15 @@ $items = $result_items->fetch_all(MYSQLI_ASSOC);
 $stmt_items->close();
 $conn->close();
 
-// 5. Logika Pengecekan Status Vendor
+// 6. Logika Pengecekan Status Vendor
 $semua_item_disetujui = true;
 $ada_item_ditolak = false;
 foreach ($items as $item) {
     if ($item['status_vendor'] == 'Pending') {
-        $semua_item_disetujui = false; // Masih ada yang nunggu
+        $semua_item_disetujui = false; 
     }
     if ($item['status_vendor'] == 'Rejected') {
-        $ada_item_ditolak = true; // Ada yang ditolak
+        $ada_item_ditolak = true; 
     }
 }
 ?>
@@ -92,10 +95,12 @@ foreach ($items as $item) {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Detail Pesanan #<?php echo $order_id; ?> - Admin Panel</title>
+    <title><?php echo htmlspecialchars($page_title); ?> - Admin Panel</title>
+    <link rel="icon" type="image/png" href="../images/minilogo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
-        /* [CSS Admin Panel Anda yang sama] */
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
@@ -103,7 +108,27 @@ foreach ($items as $item) {
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
         .content { flex: 1; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
+        th { background-color: #f2f2f2; }
+        
+        .btn-logout {
+            background-color: #dc3545; color: white; padding: 8px 12px;
+            text-decoration: none; border-radius: 5px; font-weight: bold;
+        }
+        .btn-logout:hover { background-color: #bb2d3b; color: white; }
+
+        .table .btn-sm { margin: 2px; }
+        .text-center { text-align: center !important; }
         
         /* Style untuk detail pesanan */
         .order-details, .order-items, .update-status {
@@ -120,26 +145,19 @@ foreach ($items as $item) {
         }
         .order-details p { margin: 5px 0; line-height: 1.6; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .item-img { max-width: 50px; max-height: 50px; object-fit: cover; }
-        
+        .item-img { max-width: 50px; max-height: 50px; object-fit: cover; border-radius: 4px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
         .form-group select { width: 300px; padding: 8px; }
-        .btn-submit { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-
-        .btn-kembali { display: inline-block; margin-top: 15px; color: #555; text-decoration: none; }
+        
+        .status-pending { color: orange; font-weight: bold; }
+        .status-approved { color: green; font-weight: bold; }
+        .status-rejected { color: red; font-weight: bold; }
+        
         .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
         .alert-sukses { background-color: #d4edda; color: #155724; }
         .alert-gagal { background-color: #f8d7da; color: #721c24; }
         .alert-info { background-color: #fff3cd; color: #856404; }
-
-        /* Status Vendor */
-        .status-pending { color: orange; font-weight: bold; }
-        .status-approved { color: green; font-weight: bold; }
-        .status-rejected { color: red; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -149,7 +167,7 @@ foreach ($items as $item) {
         <ul>
             <li><a href="index.php">Dashboard</a></li>
             <li><a href="kelola_pesanan.php">Kelola Pesanan</a></li>
-            <li><a href="manage_kategori.php">Kelola Kategori</a></li>
+            <li><a href="kelola_kategori.php">Kelola Kategori</a></li>
             <li><a href="kelola_produk.php">Kelola Produk</a></li>
             <li><a href="kelola_pengguna.php">Kelola Pengguna</a></li>
             <li><a href="kelola_buku_tamu.php">Kelola Buku Tamu</a></li>
@@ -161,9 +179,9 @@ foreach ($items as $item) {
 
     <div class="content">
         <div class="header">
-            <h1>Detail Pesanan #<?php echo htmlspecialchars($order['order_id']); ?></h1>
-            <a href="kelola_pesanan.php" class="btn-kembali">&laquo; Kembali ke Daftar Pesanan</a>
-        </div>
+            <h1><?php echo htmlspecialchars($page_title); ?></h1>
+            <a href="kelola_pesanan.php" class="btn btn-danger">&laquo; Kembali ke Daftar Pesanan</a>
+            </div>
 
         <?php
         if (!empty($pesan_sukses)) echo "<div class='alert alert-sukses'>$pesan_sukses</div>";
@@ -183,7 +201,7 @@ foreach ($items as $item) {
             <form action="detail_pesanan_admin.php?order_id=<?php echo $order_id; ?>" method="POST">
                 <div class="form-group">
                     <label for="status_pesanan">Status Saat Ini:</label>
-                    <select name="status_pesanan" id="status_pesanan">
+                    <select name="status_pesanan" id="status_pesanan" class="form-select w-auto d-inline-block">
                         <option value="Paid" <?php echo ($order['status'] == 'Paid') ? 'selected' : ''; ?>>Paid (Menunggu Persetujuan Vendor)</option>
                         <option value="Diproses" <?php echo ($order['status'] == 'Diproses') ? 'selected' : ''; ?>>Diproses (Semua Vendor Setuju)</option>
                         <option value="Dikirim" <?php echo ($order['status'] == 'Dikirim') ? 'selected' : ''; ?> 
@@ -195,7 +213,7 @@ foreach ($items as $item) {
                         <option value="Dibatalkan" <?php echo ($order['status'] == 'Dibatalkan') ? 'selected' : ''; ?>>Dibatalkan</option>
                     </select>
                 </div>
-                <button type="submit" name="update_status" class="btn-submit">Update Status</button>
+                <button type="submit" name="update_status" class="btn btn-primary">Update Status</button>
             </form>
         </div>
 
@@ -209,8 +227,7 @@ foreach ($items as $item) {
 
         <div class="order-items">
             <h3>Item Produk dalam Pesanan Ini</h3>
-            <table>
-                <thead>
+            <table class="table table-bordered table-hover"> <thead>
                     <tr>
                         <th>Produk</th>
                         <th>Penjual (Vendor)</th>
@@ -225,10 +242,10 @@ foreach ($items as $item) {
                         <?php foreach ($items as $item): ?>
                             <tr>
                                 <td>
-                                    <img src="../<?php echo htmlspecialchars($item['image_url']); ?>" alt="" class="item-img">
+                                    <img src="../<?php echo htmlspecialchars($item['image_url'] ?? 'images/default.png'); ?>" alt="" class="item-img">
                                     <?php echo htmlspecialchars($item['product_name']); ?>
                                 </td>
-                                <td><?php echo htmlspecialchars($item['nama_toko'] ?? 'Toko Utama (Admin)'); ?></td>
+                                <td><?php echo htmlspecialchars($item['nama_toko'] ?? 'Toko Purnama (Admin)'); ?></td>
                                 <td><?php echo $item['quantity']; ?></td>
                                 <td>Rp <?php echo number_format($item['price'], 0, ',', '.'); ?></td>
                                 <td>Rp <?php echo number_format($item['price'] * $item['quantity'], 0, ',', '.'); ?></td>
@@ -249,6 +266,8 @@ foreach ($items as $item) {
         </div>
 
     </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

@@ -1,16 +1,22 @@
 <?php
-require_once 'cek_admin.php'; // Aktifkan satpam!
-require_once '../koneksi.php'; 
+// 1. Set variabel khusus halaman
+$page_title = "Kelola Pengguna";
+
+// 2. Panggil Satpam & Header
+require_once 'cek_admin.php'; 
+require_once '../koneksi.php'; // Panggil koneksi
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Kelola Pengguna - Admin Panel</title>
+    <title><?php echo htmlspecialchars($page_title); ?> - Admin Panel</title>
+    <link rel="icon" type="image/png" href="../images/minilogo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
-        /* [CSS Anda yang sudah ada di sini] */
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
@@ -18,11 +24,28 @@ require_once '../koneksi.php';
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
         .content { flex: 1; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
         th { background-color: #f2f2f2; }
+        
+        .btn-logout {
+            background-color: #dc3545; color: white; padding: 8px 12px;
+            text-decoration: none; border-radius: 5px; font-weight: bold;
+        }
+        .btn-logout:hover { background-color: #bb2d3b; color: white; }
+
+        .table .btn-sm {
+            margin: 2px;
+        }
         
         .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
         .alert-sukses { background-color: #d4edda; color: #155724; }
@@ -49,8 +72,8 @@ require_once '../koneksi.php';
 
     <div class="content">
         <div class="header">
-            <h1>Kelola Pengguna (Pelanggan)</h1>
-            <a href="../logout.php">Logout</a>
+            <h1><?php echo htmlspecialchars($page_title); ?></h1>
+            <a href="../logout.php" class="btn-logout">LOGOUT</a>
         </div>
 
         <?php
@@ -58,13 +81,9 @@ require_once '../koneksi.php';
             $status = $_GET['status'];
             if($status == 'hapus_sukses') {
                 echo "<div class='alert alert-sukses'>Pengguna berhasil dihapus.</div>";
-            } 
-            // ▼▼▼ TAMBAHANNYA DI SINI ▼▼▼
-            else if($status == 'edit_sukses') {
+            } else if($status == 'edit_sukses') {
                 echo "<div class='alert alert-sukses'>Pengguna berhasil diperbarui.</div>";
-            }
-            // ▲▲▲ SELESAI TAMBAHAN ▲▲▲
-            else if ($status == 'hapus_gagal') {
+            } else if ($status == 'hapus_gagal') {
                 $error_msg = $_GET['error'] ?? '';
                 if ($error_msg == 'self') {
                     echo "<div class='alert alert-gagal'><strong>Gagal!</strong> Anda tidak bisa menghapus akun Anda sendiri.</div>";
@@ -80,6 +99,7 @@ require_once '../koneksi.php';
             }
         }
         ?>
+
         <table>
             <thead>
                 <tr>
@@ -88,18 +108,14 @@ require_once '../koneksi.php';
                     <th>Email</th>
                     <th>Tanggal Daftar</th>
                     <th>Role</th>
-                    <th>Aksi</th>
+                    <th class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                // Koneksi lagi jika diperlukan
-                if (!isset($conn) || $conn->ping() === false) {
-                    require '../koneksi.php';
-                }
+                if (!isset($conn) || $conn->ping() === false) { require '../koneksi.php'; }
 
                 $sql = "SELECT user_id, username, email, created_at, role FROM users ORDER BY created_at DESC";
-                
                 $result = $conn->query($sql); 
 
                 if ($result->num_rows > 0) {
@@ -111,11 +127,15 @@ require_once '../koneksi.php';
                             <td><?php echo htmlspecialchars($row['email']); ?></td>
                             <td><?php echo date('d M Y', strtotime($row['created_at'])); ?></td>
                             <td><?php echo htmlspecialchars($row['role']); ?></td>
-                            <td>
-                                <a href="edit_pengguna.php?id=<?php echo $row['user_id']; ?>">Edit</a> | 
-                                <a href="hapus_pengguna.php?id=<?php echo $row['user_id']; ?>" onclick="return confirm('Peringatan: Menghapus pengguna mungkin gagal jika sudah memiliki data pesanan. Yakin ingin melanjutkan?');">Hapus</a>
+                            <td class="text-center">
+                                <a href="edit_pengguna.php?id=<?php echo $row['user_id']; ?>" class="btn btn-primary btn-sm m-1">
+                                    Edit
+                                </a>
+                                <a href="hapus_pengguna.php?id=<?php echo $row['user_id']; ?>" class="btn btn-danger btn-sm m-1" onclick="return confirm('Peringatan: Menghapus pengguna mungkin gagal jika sudah memiliki data pesanan. Yakin ingin melanjutkan?');">
+                                    Hapus
+                                </a>
                             </td>
-                        </tr>
+                            </tr>
                 <?php
                     }
                 } else {

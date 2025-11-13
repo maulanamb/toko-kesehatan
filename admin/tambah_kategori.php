@@ -1,36 +1,59 @@
 <?php
-session_start(); 
+session_start();
 
+// 1. Set variabel khusus halaman
+$page_title = "Tambah Kategori Baru";
+
+// 2. Panggil Satpam
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
 $pesan_error = "";
 $pesan_sukses = "";
 
+// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nama_kategori_baru = $conn->real_escape_string($_POST['nama_kategori']);
-
-    if (!empty($nama_kategori_baru)) {
-        $query = "INSERT INTO categories (category_name) VALUES ('$nama_kategori_baru')";
+    $nama_kategori = $conn->real_escape_string($_POST['nama_kategori']);
+    
+    if (!empty($nama_kategori)) {
+        // Cek duplikat
+        $sql_cek = "SELECT category_id FROM categories WHERE category_name = ?";
+        $stmt_cek = $conn->prepare($sql_cek);
+        $stmt_cek->bind_param("s", $nama_kategori);
+        $stmt_cek->execute();
+        $result_cek = $stmt_cek->get_result();
         
-        if ($conn->query($query)) {
-            header("location: kelola_kategori.php?status=sukses_tambah");
-            exit(); 
+        if ($result_cek->num_rows > 0) {
+            $pesan_error = "Nama kategori tersebut sudah ada.";
         } else {
-            $pesan_error = "Gagal menambahkan kategori: " . $conn->error;
+            // Insert data baru
+            $sql_insert = "INSERT INTO categories (category_name) VALUES (?)";
+            $stmt_insert = $conn->prepare($sql_insert);
+            $stmt_insert->bind_param("s", $nama_kategori);
+            
+            if ($stmt_insert->execute()) {
+                $pesan_sukses = "Kategori baru berhasil ditambahkan. <a href='kelola_kategori.php'>Kembali ke daftar</a>.";
+            } else {
+                $pesan_error = "Gagal menyimpan ke database: " . $conn->error;
+            }
+            $stmt_insert->close();
         }
+        $stmt_cek->close();
     } else {
         $pesan_error = "Nama kategori tidak boleh kosong.";
     }
+    $conn->close();
 }
-// Tidak perlu $conn->close() di sini karena akan terjadi header redirect
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Tambah Kategori - Admin Panel</title>
+    <title><?php echo htmlspecialchars($page_title); ?> - Admin Panel</title>
+    <link rel="icon" type="image/png" href="../images/minilogo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
         body { font-family: sans-serif; display: flex; margin: 0; }
@@ -40,16 +63,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
         .content { flex: 1; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
         
-        .form-container { max-width: 500px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: white; margin-top: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .btn-submit { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-submit:hover { background-color: #1e7e34; }
-        .btn-kembali { display: inline-block; margin-top: 15px; color: #555; text-decoration: none; }
-        .error { color: red; background-color: #fdd; padding: 10px; border: 1px solid red; margin-bottom: 15px; }
+        .btn-logout {
+            background-color: #dc3545; color: white; padding: 8px 12px;
+            text-decoration: none; border-radius: 5px; font-weight: bold;
+        }
+        .btn-logout:hover { background-color: #bb2d3b; color: white; }
+
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .alert-sukses { background-color: #d4edda; color: #155724; }
+        .alert-gagal { background-color: #f8d7da; color: #721c24; }
+
+        /* Style untuk Form */
+        .form-container {
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -71,28 +111,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <div class="content">
         <div class="header">
-            <h1>Tambah Kategori Baru</h1>
-            <a href="../logout.php">Logout</a>
+            <h1><?php echo htmlspecialchars($page_title); ?></h1>
+            <a href="../logout.php" class="btn-logout">LOGOUT</a>
         </div>
 
         <div class="form-container">
             <?php 
             if (!empty($pesan_error)) {
-                echo "<div class='error'>$pesan_error</div>";
+                echo "<div class='alert alert-gagal'>$pesan_error</div>";
+            }
+            if (!empty($pesan_sukses)) {
+                echo "<div class='alert alert-sukses'>$pesan_sukses</div>";
             }
             ?>
-
+            
             <form action="tambah_kategori.php" method="POST">
-                <div class="form-group">
-                    <label for="nama_kategori">Nama Kategori:</label>
-                    <input type="text" id="nama_kategori" name="nama_kategori" required>
+                <div class="mb-3">
+                    <label for="nama_kategori" class="form-label">Nama Kategori Baru:</label>
+                    <input type="text" id="nama_kategori" name="nama_kategori" class="form-control" required>
                 </div>
-                <button type="submit" class="btn-submit">Simpan Kategori</button>
+                
+                <button type="submit" class="btn btn-primary">Simpan Kategori</button>
             </form>
-
-            <a href="kelola_kategori.php" class="btn-kembali">&laquo; Kembali ke Manajemen Kategori</a>
+            
+            <a href="kelola_kategori.php" class="btn btn-secondary mt-3">Kembali ke Kelola Kategori</a>
         </div>
-    </div>
+        </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

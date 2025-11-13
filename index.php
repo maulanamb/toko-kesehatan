@@ -1,5 +1,25 @@
 <?php
 session_start();
+
+// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (VERSI PELANGGAN YANG BENAR) ▼▼▼ ---
+// Cek HANYA jika pengguna sudah login. Jangan blokir visitor!
+if (isset($_SESSION['user_id'])) {
+    $batas_waktu = 1800; // 30 menit
+    if (isset($_SESSION['waktu_terakhir_aktif'])) {
+        if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
+            session_unset();
+            session_destroy();
+            // Arahkan ke login dengan pesan
+            header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
+            exit();
+        }
+    }
+    // Reset timer setiap kali halaman dimuat
+    $_SESSION['waktu_terakhir_aktif'] = time();
+}
+// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
+
+
 require_once 'koneksi.php'; // Pastikan $conn
 
 // --- 1. Logika untuk Kategori (Filter) ---
@@ -32,7 +52,8 @@ $sql_produk = "SELECT p.product_id, p.product_name, p.price, p.image_url, p.stoc
                FROM products p 
                LEFT JOIN toko t ON p.toko_id = t.toko_id
                WHERE p.stock > 0 
-               AND (p.toko_id IS NULL OR t.status = 'approved')"; // <-- Filter produk yang 'live'
+               AND (p.toko_id IS NULL OR t.status = 'approved')
+               AND p.status_produk = 'Aktif'"; 
 
 // Tambahkan filter kategori JIKA dipilih
 if ($kategori_dipilih > 0) {
@@ -70,12 +91,22 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($nama_kategori_aktif); ?> - Toko Kesehatan</title>
-    
+    <title><?php echo htmlspecialchars($nama_kategori_aktif); ?> - Toko Kesehatan Purnama</title>
+    <link rel="icon" type="image/png" href="images/minilogo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <style>
+        .navbar-brand {
+            padding-top: 0.25rem; 
+            padding-bottom: 0.25rem; 
+            margin-right: 1rem; 
+        }
+        .navbar-brand img {
+            height: 40px; 
+            width: auto;
+            vertical-align: middle; 
+        }
         .card-img-top {
             width: 100%;
             height: 200px;
@@ -91,7 +122,10 @@ $conn->close();
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
+            
+            <a class="navbar-brand" href="index.php">
+                <img src="images/logo.png" alt="Toko Kesehatan Purnama Logo">
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -154,6 +188,7 @@ $conn->close();
                     <?php endforeach; ?>
                 </div>
             </div>
+
             <div class="col-lg-9">
                 <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
                     <h2 class="h5 mb-0"><?php echo htmlspecialchars($nama_kategori_aktif); ?></h2>
@@ -184,8 +219,8 @@ $conn->close();
                                         <p class="card-text"><small class="text-muted">Stok: <?php echo $product['stock']; ?></small></p>
                                     </div>
                                     <div class="card-footer bg-white border-top-0">
-                                        <a href="detail_produk.php?id=<?php echo $product['product_id']; ?>" class="btn btn-outline-secondary btn-sm">Lihat Detail</a>
-                                        <a href="keranjang_tambah.php?id=<?php echo $product['product_id']; ?>" class="btn btn-primary btn-sm float-end">Beli</a>
+                                        <a href="detail_produk.php?id=<?php echo $product['product_id']; ?>" class="btn btn-outline-primary">Lihat Detail</a>
+                                        <a href="keranjang_tambah.php?id=<?php echo $product['product_id']; ?>" class="btn btn-primary float-end">Beli</a>
                                     </div>
                                 </div>
                             </div>
@@ -197,7 +232,8 @@ $conn->close();
                     <?php endif; ?>
                 </div>
             </div>
-            </div>
+            
+        </div>
     </div>
 
 </body>

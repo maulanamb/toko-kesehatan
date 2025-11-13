@@ -1,11 +1,16 @@
 <?php
 session_start();
+
+// 1. Set variabel khusus halaman
+$page_title = "Tambah Produk Baru";
+
+// 2. Panggil Satpam
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
 $pesan_error = "";
 
-// Cek jika form sudah di-submit
+// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil data form
     $nama_produk = $conn->real_escape_string($_POST['nama_produk']);
@@ -14,21 +19,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stok = (int) $_POST['stok'];
     $category_id = (int) $_POST['category_id'];
     
-    // ▼▼▼ PERUBAHAN 1: Buat Kode Produk Otomatis ▼▼▼
-    $product_code = "SKU-" . strtoupper(uniqid()); 
-    // ▲▲▲ SELESAI PERUBAHAN 1 ▲▲▲
+    // Kode produk unik untuk Admin
+    $product_code = "SKU-ADMIN-" . strtoupper(uniqid()); 
     
     $image_url = ""; 
     
-    // ===================================
     // PROSES UPLOAD GAMBAR
-    // ===================================
     if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] === UPLOAD_ERR_OK) {
         $file_tmp = $_FILES['gambar']['tmp_name'];
         $file_name = basename($_FILES['gambar']['name']); 
         $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
         
-        $new_file_name = "prod_" . uniqid() . '.' . $file_ext;
+        $new_file_name = "prod_admin_" . uniqid() . '.' . $file_ext;
         $upload_dir = '../images/products/'; 
         
         if (!is_dir($upload_dir)) {
@@ -43,26 +45,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] !== UPLOAD_ERR_NO_FILE) {
         $pesan_error = "Terjadi kesalahan saat upload file: " . $_FILES['gambar']['error'];
     }
-    // ===================================
     
     if (empty($pesan_error)) {
         
-        // ▼▼▼ PERUBAHAN 2: Tambahkan 'product_code' ke Query INSERT ▼▼▼
-        $query = "INSERT INTO products (product_code, product_name, description, price, stock, category_id, image_url) 
-                  VALUES ('$product_code', '$nama_produk', '$deskripsi', $harga, $stok, $category_id, '$image_url')";
-        // ▲▲▲ SELESAI PERUBAHAN 2 ▲▲▲
+        // Produk yang dibuat Admin, 'toko_id' di-set ke NULL
+        $query = "INSERT INTO products (product_code, product_name, description, price, stock, category_id, image_url, toko_id) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, NULL)";
         
-        if ($conn->query($query)) {
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("sssdiis", $product_code, $nama_produk, $deskripsi, $harga, $stok, $category_id, $image_url);
+
+        if ($stmt->execute()) {
             header("location: kelola_produk.php?status=sukses_tambah");
             exit();
         } else {
-            // Tampilkan error SQL jika gagal
-            $pesan_error = "Gagal menambahkan produk ke database: " . $conn->error;
+            $pesan_error = "Gagal menambahkan produk ke database: " . $stmt->error;
         }
+        $stmt->close();
     }
 }
 
-// Ambil data kategori untuk dropdown (SELECT box)
+// Ambil data kategori untuk dropdown
 $category_query = "SELECT category_id, category_name FROM categories ORDER BY category_name ASC";
 $category_result = $conn->query($category_query);
 
@@ -73,10 +76,12 @@ $conn->close();
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Tambah Produk - Admin Panel</title>
+    <title><?php echo htmlspecialchars($page_title); ?> - Admin Panel</title>
+    <link rel="icon" type="image/png" href="../images/minilogo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
-        /* [CSS Anda yang sudah ada di sini] */
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
@@ -84,16 +89,32 @@ $conn->close();
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
         .content { flex: 1; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
-        .form-container { max-width: 700px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: white; margin-top: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input[type="text"], .form-group input[type="number"], .form-group textarea, .form-group select { 
-            width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; 
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px;
+            margin-bottom: 20px;
         }
-        .btn-submit { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-kembali { display: inline-block; margin-top: 15px; color: #555; text-decoration: none; }
-        .error { color: red; background-color: #fdd; padding: 10px; border: 1px solid red; margin-bottom: 15px; }
+        
+        .btn-logout {
+            background-color: #dc3545; color: white; padding: 8px 12px;
+            text-decoration: none; border-radius: 5px; font-weight: bold;
+        }
+        .btn-logout:hover { background-color: #bb2d3b; color: white; }
+
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .alert-gagal { background-color: #f8d7da; color: #721c24; }
+
+        /* Style untuk Form */
+        .form-container {
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -115,26 +136,26 @@ $conn->close();
 
     <div class="content">
         <div class="header">
-            <h1>Tambah Produk Baru</h1>
-            <a href="../logout.php">Logout</a>
+            <h1><?php echo htmlspecialchars($page_title); ?></h1>
+            <a href="../logout.php" class="btn-logout">LOGOUT</a>
         </div>
 
         <div class="form-container">
             <?php 
             if (!empty($pesan_error)) {
-                echo "<div class='error'>$pesan_error</div>";
+                echo "<div class='alert alert-gagal'>$pesan_error</div>";
             }
             ?>
 
             <form action="tambah_produk.php" method="POST" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="nama_produk">Nama Produk:</label>
-                    <input type="text" id="nama_produk" name="nama_produk" required>
+                <div class="mb-3">
+                    <label for="nama_produk" class="form-label">Nama Produk:</label>
+                    <input type="text" id="nama_produk" name="nama_produk" class="form-control" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="category_id">Kategori:</label>
-                    <select id="category_id" name="category_id" required>
+                <div class="mb-3">
+                    <label for="category_id" class="form-label">Kategori:</label>
+                    <select id="category_id" name="category_id" class="form-select" required>
                         <option value="">-- Pilih Kategori --</option>
                         <?php 
                         if ($category_result && $category_result->num_rows > 0) {
@@ -146,32 +167,34 @@ $conn->close();
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="deskripsi">Deskripsi:</label>
-                    <textarea id="deskripsi" name="deskripsi" rows="4"></textarea>
+                <div class="mb-3">
+                    <label for="deskripsi" class="form-label">Deskripsi:</label>
+                    <textarea id="deskripsi" name="deskripsi" class="form-control" rows="4"></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label for="harga">Harga (Rp):</label>
-                    <input type="number" id="harga" name="harga" step="1000" min="0" required>
+                <div class="mb-3">
+                    <label for="harga" class="form-label">Harga (Rp):</label>
+                    <input type="number" id="harga" name="harga" class="form-control" step="1000" min="0" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="stok">Stok:</label>
-                    <input type="number" id="stok" name="stok" min="0" required>
+                <div class="mb-3">
+                    <label for="stok" class="form-label">Stok:</label>
+                    <input type="number" id="stok" name="stok" class="form-control" min="0" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="gambar">Gambar Produk:</label>
-                    <input type="file" id="gambar" name="gambar" accept="image/*">
+                <div class="mb-3">
+                    <label for="gambar" class="form-label">Gambar Produk:</label>
+                    <input type="file" id="gambar" name="gambar" class="form-control" accept="image/*">
                 </div>
                 
-                <button type="submit" class="btn-submit">Simpan Produk</button>
+                <button type="submit" class="btn btn-primary">Simpan Produk</button>
             </form>
 
-            <a href="kelola_produk.php" class="btn-kembali">&laquo; Kembali ke Manajemen Produk</a>
+            <a href="kelola_produk.php" class="btn btn-secondary mt-3">Kembali ke Kelola Produk</a>
         </div>
-    </div>
+        </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
