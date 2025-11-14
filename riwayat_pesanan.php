@@ -10,7 +10,9 @@ if (isset($_SESSION['waktu_terakhir_aktif'])) {
         exit();
     }
 }
-$_SESSION['waktu_terakhir_aktif'] = time();
+if (isset($_SESSION['user_id'])) {
+    $_SESSION['waktu_terakhir_aktif'] = time(); 
+}
 // --- SELESAI LOGIKA LOGOUT ---
 
 require_once 'koneksi.php'; // Pastikan $conn
@@ -56,11 +58,13 @@ $pesan_error = $_GET['error'] ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Pesanan</title>
-    <link rel="icon" type="image/png" href="images/minilogo.png">
+    <title>Riwayat Pesanan - Toko Kesehatan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <style>
+    <link rel="icon" type="image/png" href="images/minilogo.png"> <style>
+        .navbar-brand img { height: 40px; width: auto; vertical-align: middle; }
+        .card-img-top { width: 100%; height: 200px; object-fit: cover; }
+        .sidebar-kategori .list-group-item.active { background-color: #007bff; border-color: #007bff; }
         /* CSS tambahan untuk status */
         .status { 
             font-weight: bold; 
@@ -73,17 +77,6 @@ $pesan_error = $_GET['error'] ?? '';
         .status-dikirim { background-color: #007bff; }
         .status-selesai { background-color: #28a745; }
         .status-dibatalkan { background-color: #dc3545; }
-
-        .navbar-brand {
-            padding-top: 0; /* Hapus padding-top default */
-            padding-bottom: 0; /* Hapus padding-bottom default */
-            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
-        }
-        .navbar-brand img {
-            height: 80px; /* Ukuran logo yang lebih terlihat */
-            width: auto;
-            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
-        }
     </style>
 </head>
 <body class="bg-light">
@@ -182,6 +175,14 @@ $pesan_error = $_GET['error'] ?? '';
                                                         class="btn btn-sm btn-outline-danger mt-1" 
                                                         onclick="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini? Stok akan dikembalikan.');">
                                                         Batalkan
+                                                </a>
+                                            <?php endif; ?>
+                                            
+                                            <?php if ($order['status'] == 'Dikirim'): ?>
+                                                <a href="selesaikan_pesanan.php?order_id=<?php echo $order['order_id']; ?>" 
+                                                        class="btn btn-sm btn-success mt-1" 
+                                                        onclick="return confirm('Apakah Anda yakin sudah menerima pesanan ini? Tindakan ini akan menyelesaikan pesanan.');">
+                                                        Pesanan Diterima
                                                 </a>
                                             <?php endif; ?>
                                             </td>

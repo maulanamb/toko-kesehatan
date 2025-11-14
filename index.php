@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (VERSI PELANGGAN YANG BENAR) ▼▼▼ ---
+// --- LOGIKA LOGOUT OTOMATIS (VERSI PELANGGAN/PUBLIK YANG BENAR) ---
 // Cek HANYA jika pengguna sudah login. Jangan blokir visitor!
 if (isset($_SESSION['user_id'])) {
     $batas_waktu = 1800; // 30 menit
@@ -17,7 +17,7 @@ if (isset($_SESSION['user_id'])) {
     // Reset timer setiap kali halaman dimuat
     $_SESSION['waktu_terakhir_aktif'] = time();
 }
-// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
+// --- SELESAI LOGIKA LOGOUT ---
 
 
 require_once 'koneksi.php'; // Pastikan $conn
@@ -98,19 +98,21 @@ $conn->close();
     
     <style>
         .navbar-brand {
-            padding-top: 0.25rem; 
-            padding-bottom: 0.25rem; 
-            margin-right: 1rem; 
+            padding-top: 0; /* Hapus padding-top default */
+            padding-bottom: 0; /* Hapus padding-bottom default */
+            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
         }
         .navbar-brand img {
-            height: 40px; 
+            height: 80px; /* Ukuran logo yang lebih terlihat */
             width: auto;
-            vertical-align: middle; 
-        }
+            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
+        }   
         .card-img-top {
             width: 100%;
             height: 200px;
-            object-fit: cover;
+            /* ▼▼▼ PERBAIKAN: Ganti 'cover' menjadi 'contain' ▼▼▼ */
+            object-fit: contain; 
+            /* ▲▲▲ SELESAI ▲▲▲ */
         }
         .sidebar-kategori .list-group-item.active {
             background-color: #007bff;

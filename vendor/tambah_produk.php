@@ -1,5 +1,8 @@
 <?php
-// 1. Panggil "Satpam" Vendor
+// 1. Set variabel khusus halaman
+$page_title = "Tambah Produk Baru";
+
+// 2. Panggil "Satpam" Vendor
 require_once 'cek_vendor.php'; 
 // Jika lolos, kita akan punya $toko_id_vendor dan $conn
 $pesan_error = "";
@@ -36,13 +39,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     if (empty($pesan_error)) {
-        // ▼▼▼ PERBEDAAN UTAMA ADA DI SINI ▼▼▼
         // Query INSERT menyertakan 'toko_id' dari session
         $query = "INSERT INTO products (product_code, product_name, description, price, stock, category_id, image_url, toko_id) 
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $conn->prepare($query);
-        // "sssdissi" = string, string, string, double, integer, string, string, integer
         $stmt->bind_param("sssdissi", 
             $product_code, 
             $nama_produk, 
@@ -53,7 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $image_url, 
             $toko_id_vendor // <-- Disisipkan secara otomatis
         );
-        // ▲▲▲ SELESAI ▲▲▲
 
         if ($stmt->execute()) {
             header("location: kelola_produk.php?status=sukses_tambah");
@@ -77,63 +77,124 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Produk Baru - Vendor Panel</title>
+    <title><?php echo htmlspecialchars($page_title); ?> - Vendor Panel</title>
+    <link rel="icon" type="image/png" href="../images/minilogo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
         body { font-family: sans-serif; display: flex; margin: 0; }
-        .sidebar { width: 250px; background: #2c3e50; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-        .sidebar h2 { border-bottom: 1px solid #34495e; padding-bottom: 10px; }
+        .sidebar { 
+            width: 250px; 
+            background: #333; /* <-- WARNA ADMIN */
+            color: white; 
+            min-height: 100vh; 
+            padding: 20px; 
+            box-sizing: border-box; 
+        }
+        .sidebar h2 { 
+            border-bottom: 1px solid #555; /* <-- WARNA ADMIN */
+            padding-bottom: 10px; 
+        }
         .sidebar ul { list-style: none; padding: 0; }
         .sidebar ul li { margin: 15px 0; }
         .sidebar ul li a { color: white; text-decoration: none; font-size: 1.1em; }
-        .sidebar ul li a:hover { color: #1abc9c; }
-        .content { flex: 1; padding: 20px; background-color: #f9f9f9; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; background: white; padding: 15px; margin: -20px -20px 20px -20px; }
         
-        .form-container { max-width: 700px; padding: 20px; border-radius: 5px; background-color: white; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group textarea, .form-group select { 
-            width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; 
+        .content { flex: 1; padding: 20px; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px;
+            margin-bottom: 20px;
         }
-        .btn-submit { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-kembali { display: inline-block; margin-top: 15px; color: #555; text-decoration: none; }
-        .error { color: red; background-color: #fdd; padding: 10px; border: 1px solid red; margin-bottom: 15px; }
+        
+        /* Tombol Header (Biru) */
+        .btn-header {
+            background-color: #0d6efd; 
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .btn-header:hover {
+            background-color: #0b5ed7; 
+            color: white;
+        }
+
+        /* Tombol Logout Sidebar (Merah) */
+        .sidebar ul li.logout-item {
+            margin: 20px 0 0 0;
+            padding-top: 15px;
+            border-top: 1px solid #555;
+        }
+        .sidebar ul li a.sidebar-logout {
+            background-color: #dc3545; 
+            color: white !important;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            display: block; 
+            transition: background-color 0.2s;
+        }
+        .sidebar ul li a.sidebar-logout:hover {
+            background-color: #bb2d3b;
+            color: white !important;
+        }
+        
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .alert-gagal { background-color: #f8d7da; color: #721c24; }
+        
+        /* Style untuk Form */
+        .form-container {
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <h2>Vendor Panel</h2>
+        <p>Toko: <strong><?php echo htmlspecialchars($nama_toko_vendor); ?></strong></p>
         <ul>
             <li><a href="index.php">Dashboard</a></li>
             <li><a href="kelola_produk.php">Kelola Produk</a></li>
             <li><a href="kelola_pesanan.php">Kelola Pesanan Toko</a></li>
-            <li><hr style="border-color: #34495e;"></li>
-            <li><a href="../logout.php">Logout</a></li>
+            <li class="logout-item">
+                <a href="../logout.php" class="sidebar-logout" onclick="return confirm('Anda yakin ingin logout?');">Logout</a>
+            </li>
         </ul>
     </div>
 
     <div class="content">
         <div class="header">
-            <h1>Tambah Produk Baru</h1>
+            <h1><?php echo htmlspecialchars($page_title); ?></h1>
+            <a href="../index.php" class="btn-header">Lihat Toko Publik</a>
         </div>
 
         <div class="form-container">
             <?php 
             if (!empty($pesan_error)) {
-                echo "<div class='error'>$pesan_error</div>";
+                echo "<div class='alert alert-gagal'>$pesan_error</div>";
             }
             ?>
 
             <form action="tambah_produk.php" method="POST" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="nama_produk">Nama Produk:</label>
-                    <input type="text" id="nama_produk" name="nama_produk" required>
+                <div class="mb-3">
+                    <label for="nama_produk" class="form-label">Nama Produk:</label>
+                    <input type="text" id="nama_produk" name="nama_produk" class="form-control" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="category_id">Kategori:</label>
-                    <select id="category_id" name="category_id" required>
+                <div class="mb-3">
+                    <label for="category_id" class="form-label">Kategori:</label>
+                    <select id="category_id" name="category_id" class="form-select" required>
                         <option value="">-- Pilih Kategori --</option>
                         <?php 
                         if ($category_result && $category_result->num_rows > 0) {
@@ -145,32 +206,34 @@ $conn->close();
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="deskripsi">Deskripsi:</label>
-                    <textarea id="deskripsi" name="deskripsi" rows="4"></textarea>
+                <div class="mb-3">
+                    <label for="deskripsi" class="form-label">Deskripsi:</label>
+                    <textarea id="deskripsi" name="deskripsi" class="form-control" rows="4"></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label for="harga">Harga (Rp):</label>
-                    <input type="number" id="harga" name="harga" step="1000" min="0" required>
+                <div class="mb-3">
+                    <label for="harga" class="form-label">Harga (Rp):</label>
+                    <input type="number" id="harga" name="harga" class="form-control" step="1000" min="0" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="stok">Stok:</label>
-                    <input type="number" id="stok" name="stok" min="0" required>
+                <div class="mb-3">
+                    <label for="stok" class="form-label">Stok:</label>
+                    <input type="number" id="stok" name="stok" class="form-control" min="0" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="gambar">Gambar Produk:</label>
-                    <input type="file" id="gambar" name="gambar" accept="image/*" required>
+                <div class="mb-3">
+                    <label for="gambar" class="form-label">Gambar Produk:</label>
+                    <input type="file" id="gambar" name="gambar" class="form-control" accept="image/*" required>
                 </div>
                 
-                <button type="submit" class="btn-submit">Simpan Produk</button>
+                <button type="submit" class="btn btn-primary">Simpan Produk</button>
             </form>
 
-            <a href="kelola_produk.php" class="btn-kembali">&laquo; Kembali ke Kelola Produk</a>
+            <a href="kelola_produk.php" class="btn btn-secondary mt-3">Kembali ke Kelola Produk</a>
         </div>
-    </div>
+        </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

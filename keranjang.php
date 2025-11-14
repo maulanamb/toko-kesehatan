@@ -218,7 +218,7 @@ $conn->close();
                 <?php if (count($cart_items) > 0): ?>
                 <div class="card-footer bg-white p-3 d-flex justify-content-between align-items-center">
                     <button type="submit" name="update_cart" class="btn btn-outline-secondary">
-                        🔄 Update Keranjang
+                        Update Keranjang
                     </button>
                     
                     <a href="checkout.php" class="btn btn-success btn-lg">
