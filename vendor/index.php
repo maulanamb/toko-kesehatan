@@ -18,7 +18,7 @@ require_once 'cek_vendor.php';
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { 
             width: 250px; 
-            background: #333; /* Warna Admin */
+            background: #12b05f; /* Warna Admin */
             color: white; 
             min-height: 100vh; 
             padding: 20px; 

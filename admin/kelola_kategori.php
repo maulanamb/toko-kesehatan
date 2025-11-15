@@ -18,7 +18,7 @@ require_once '../koneksi.php';
     
     <style>
         body { font-family: sans-serif; display: flex; margin: 0; }
-        .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .sidebar { width: 250px; background: #12b05f; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
         .sidebar ul { list-style: none; padding: 0; }
         .sidebar ul li { margin: 15px 0; }

@@ -77,6 +77,17 @@ $pesan_error = $_GET['error'] ?? '';
         .status-dikirim { background-color: #007bff; }
         .status-selesai { background-color: #28a745; }
         .status-dibatalkan { background-color: #dc3545; }
+
+        .navbar-brand {
+            padding-top: 0; /* Hapus padding-top default */
+            padding-bottom: 0; /* Hapus padding-bottom default */
+            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
+        }
+        .navbar-brand img {
+            height: 80px; /* Ukuran logo yang lebih terlihat */
+            width: auto;
+            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
+        }   
     </style>
 </head>
 <body class="bg-light">

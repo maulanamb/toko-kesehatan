@@ -106,7 +106,7 @@ $conn->close();
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
-            <a class="navbar-brand" href="profil.php">
+            <a class="navbar-brand" href="index.php">
                 <img src="images/logo.png" alt="Toko Kesehatan Purnama Logo">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -131,8 +131,8 @@ $conn->close();
                         <?php elseif ($role == 'vendor'): ?>
                             <li class="nav-item"><a class="nav-link" href="vendor/index.php">Dashboard Vendor</a></li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                    Halo, <?php echo htmlspecialchars($username); ?>
+                                <a class="nav-link dropdown-toggle" href="" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    Halo, <?php echo htmlspecialchars($_SESSION['username']); ?>
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
