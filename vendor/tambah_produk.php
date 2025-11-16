@@ -86,7 +86,7 @@ $conn->close();
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { 
             width: 250px; 
-            background: #12b05f; /* <-- WARNA ADMIN */
+            background: #0F4A86; /* <-- WARNA ADMIN */
             color: white; 
             min-height: 100vh; 
             padding: 20px; 

@@ -4,7 +4,28 @@ $page_title = "Dashboard";
 
 // 2. Panggil Satpam
 require_once 'cek_admin.php'; 
-require_once '../koneksi.php'; // Panggil koneksi (meskipun tidak dipakai, untuk konsistensi)
+require_once '../koneksi.php'; // Panggil koneksi
+
+// --- ▼▼▼ 3. AMBIL DATA UNTUK KARTU ▼▼▼ ---
+
+// 1. Hitung Jumlah Pesanan (yang tidak dibatalkan)
+$result_pesanan = $conn->query("SELECT COUNT(order_id) as total_pesanan FROM orders WHERE status != 'Dibatalkan'");
+$total_pesanan = $result_pesanan->fetch_assoc()['total_pesanan'];
+
+// 2. Hitung Jumlah Produk (yang aktif)
+$result_produk = $conn->query("SELECT COUNT(product_id) as total_produk FROM products WHERE status_produk = 'Aktif'");
+$total_produk = $result_produk->fetch_assoc()['total_produk'];
+
+// 3. Hitung Jumlah Kategori
+$result_kategori = $conn->query("SELECT COUNT(category_id) as total_kategori FROM categories");
+$total_kategori = $result_kategori->fetch_assoc()['total_kategori'];
+
+// 4. Hitung Jumlah User (Hanya customer dan vendor)
+$result_user = $conn->query("SELECT COUNT(user_id) as total_user FROM users WHERE role != 'admin'");
+$total_user = $result_user->fetch_assoc()['total_user'];
+
+$conn->close();
+// --- ▲▲▲ SELESAI AMBIL DATA ▲▲▲ ---
 ?>
 
 <!DOCTYPE html>
@@ -12,10 +33,13 @@ require_once '../koneksi.php'; // Panggil koneksi (meskipun tidak dipakai, untuk
 <head>
     <meta charset="UTF-8">
     <title><?php echo htmlspecialchars($page_title); ?> - Admin Panel</title>
-    <link rel="icon" type="image/png" href="../images/minilogo.png"> <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="../images/minilogo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
         body { font-family: sans-serif; display: flex; margin: 0; }
-        .sidebar { width: 250px; background: #12b05f; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .sidebar { width: 250px; background: #0F4A86; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
         .sidebar ul { list-style: none; padding: 0; }
         .sidebar ul li { margin: 15px 0; }
@@ -30,46 +54,52 @@ require_once '../koneksi.php'; // Panggil koneksi (meskipun tidak dipakai, untuk
             margin-bottom: 20px;
         }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
-        th { background-color: #f2f2f2; }
-        
-        /* CSS STATUS VENDOR */
-        .status-vendor {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            font-weight: bold;
-            color: white;
-        }
-        .status-pending { background-color: #ffc107; color: #333; }
-        .status-approved { background-color: #28a745; }
-        .status-rejected { background-color: #dc3545; }
-        
-        /* CSS TOMBOL LOGOUT */
         .btn-logout {
-            background-color: #dc3545; 
-            color: white;
-            padding: 8px 12px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            transition: background-color 0.2s;
+            background-color: #dc3545; color: white; padding: 8px 12px;
+            text-decoration: none; border-radius: 5px; font-weight: bold;
         }
-        .btn-logout:hover {
-            background-color: #bb2d3b; 
-            color: white;
-        }
+        .btn-logout:hover { background-color: #bb2d3b; color: white; }
 
-        /* CSS BANTUAN */
-        .table .btn-sm {
-            margin: 2px;
+        /* ▼▼▼ 4. CSS BARU UNTUK KARTU DASHBOARD ▼▼▼ */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 kolom */
+            gap: 20px;
+            margin-top: 20px;
         }
-        .text-center {
-            text-align: center !important;
+        .kpi-card {
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
         }
+        .kpi-card h3 {
+            margin-top: 0;
+            font-size: 1.1em;
+            color: #555;
+            font-weight: 600;
+        }
+        .kpi-card .nilai {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #0d6efd; /* Biru Primer */
+        }
+        
+        /* Responsive untuk HP (susun ke bawah) */
+        @media (max-width: 992px) {
+            .kpi-container {
+                grid-template-columns: repeat(2, 1fr); /* 2 kolom di tablet */
+            }
+        }
+        @media (max-width: 576px) {
+            .kpi-container {
+                grid-template-columns: 1fr; /* 1 kolom di HP */
+            }
+        }
+        /* ▲▲▲ SELESAI ▲▲▲ */
     </style>
-    </head>
+</head>
 <body>
 
     <div class="sidebar">
@@ -89,12 +119,32 @@ require_once '../koneksi.php'; // Panggil koneksi (meskipun tidak dipakai, untuk
 
     <div class="content">
         <div class="header">
-            <h1><?php echo htmlspecialchars($page_title); ?></h1> <a href="../logout.php" class="btn-logout">LOGOUT</a>
+            <h1><?php echo htmlspecialchars($page_title); ?></h1>
+            <a href="../logout.php" class="btn-logout">LOGOUT</a>
         </div>
 
         <h2>Selamat Datang di Admin Panel</h2>
         <p>Silakan pilih menu di sebelah kiri untuk mulai mengelola website Anda.</p>
-    </div>
+        
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <h3>Total Pesanan</h3>
+                <div class="nilai"><?php echo $total_pesanan; ?></div>
+            </div>
+            <div class="kpi-card">
+                <h3>Produk Aktif</h3>
+                <div class="nilai"><?php echo $total_produk; ?></div>
+            </div>
+            <div class="kpi-card">
+                <h3>Total Kategori</h3>
+                <div class="nilai"><?php echo $total_kategori; ?></div>
+            </div>
+            <div class="kpi-card">
+                <h3>Total Pengguna</h3>
+                <div class="nilai"><?php echo $total_user; ?></div>
+            </div>
+        </div>
+        </div>
 
 </body>
 </html>

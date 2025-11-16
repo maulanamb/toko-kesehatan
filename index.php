@@ -91,12 +91,18 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($nama_kategori_aktif); ?> - Toko Kesehatan Purnama</title>
+    <title><?php echo htmlspecialchars($nama_kategori_aktif); ?></title>
     <link rel="icon" type="image/png" href="images/minilogo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <style>
+        body{
+            background-color: #F4F5F7;
+        }
+        .navbar{
+            background-color: #f8f8ff;
+        }
         .navbar-brand {
             padding-top: 0; /* Hapus padding-top default */
             padding-bottom: 0; /* Hapus padding-bottom default */
@@ -115,14 +121,14 @@ $conn->close();
             /* ▲▲▲ SELESAI ▲▲▲ */
         }
         .sidebar-kategori .list-group-item.active {
-            background-color: #007bff;
-            border-color: #007bff;
+            background-color: ##0d6efd;
+            border-color: ##0d6efd;
         }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-light shadow-sm">
         <div class="container">
             
             <a class="navbar-brand" href="index.php">
@@ -220,9 +226,9 @@ $conn->close();
                                         <p class="card-text fw-bold text-success">Rp <?php echo number_format($product['price'], 0, ',', '.'); ?></p>
                                         <p class="card-text"><small class="text-muted">Stok: <?php echo $product['stock']; ?></small></p>
                                     </div>
-                                    <div class="card-footer bg-white border-top-0">
+                                    <div class="card-footer white border-top-0">
                                         <a href="detail_produk.php?id=<?php echo $product['product_id']; ?>" class="btn btn-outline-primary">Lihat Detail</a>
-                                        <a href="keranjang_tambah.php?id=<?php echo $product['product_id']; ?>" class="btn btn-primary float-end">Beli</a>
+                                        <a href="keranjang_tambah.php?id=<?php echo $product['product_id']; ?>" class="btn btn-success float-end">Beli</a>
                                     </div>
                                 </div>
                             </div>
