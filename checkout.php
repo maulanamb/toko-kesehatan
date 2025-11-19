@@ -116,7 +116,16 @@ $alamat_pengiriman_default = trim($alamat_pengiriman_default, ", ");
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        .navbar-brand img { height: 40px; width: auto; vertical-align: middle; }
+        .navbar-brand {
+            padding-top: 0; 
+            padding-bottom: 0; 
+            margin-right: 0.5rem;
+        }
+        .navbar-brand img {
+            height: 80px; 
+            width: auto;
+            vertical-align: middle; 
+        }
     </style>
 </head>
 <body class="bg-light">
