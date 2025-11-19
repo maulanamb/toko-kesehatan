@@ -1,10 +1,7 @@
 <?php
-// 1. Set variabel khusus halaman
 $page_title = "Kelola Pesanan Toko";
 
-// 2. Panggil "Satpam" Vendor
 require_once 'cek_vendor.php'; 
-// Jika lolos, kita akan punya $toko_id_vendor dan $conn
 ?>
 
 <!DOCTYPE html>
@@ -21,14 +18,14 @@ require_once 'cek_vendor.php';
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { 
             width: 250px; 
-            background: #0F4A86; /* <-- WARNA ADMIN */
+            background: #0F4A86; 
             color: white; 
             min-height: 100vh; 
             padding: 20px; 
             box-sizing: border-box; 
         }
         .sidebar h2 { 
-            border-bottom: 1px solid #555; /* <-- WARNA ADMIN */
+            border-bottom: 1px solid #555;
             padding-bottom: 10px; 
         }
         .sidebar ul { list-style: none; padding: 0; }

@@ -1,43 +1,37 @@
 <?php
 session_start();
 
-// 1. Set variabel khusus halaman
 $page_title = "Edit Pengguna";
 
-// 2. Panggil Satpam
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
 $pesan_error = "";
 $pesan_sukses = "";
 
-// Ambil ID pengguna dari URL
 $user_id_to_edit = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($user_id_to_edit === 0) {
     header('location: kelola_pengguna.php?status=id_tidak_valid');
     exit();
 }
 
-// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $conn->real_escape_string($_POST['username']);
     $email = $conn->real_escape_string($_POST['email']);
     $role = $conn->real_escape_string($_POST['role']);
     $password = $_POST['password']; // Ambil password (jika diisi)
 
-    // Validasi dasar
+    
     if (!empty($username) && !empty($email) && !empty($role)) {
         
-        // Cek apakah admin utama (ID 1) diedit dan rolenya diubah
+        
         if ($user_id_to_edit == 1 && $role != 'admin') {
             $pesan_error = "Gagal! Role untuk admin utama (ID 1) tidak boleh diubah dari 'admin'.";
         } 
-        // Cek apakah admin mencoba mengubah role-nya sendiri
         else if ($user_id_to_edit == $admin_id_logged_in && $role != 'admin') {
              $pesan_error = "Gagal! Anda tidak bisa mengubah role akun Anda sendiri.";
         }
         else {
-            // Siapkan query UPDATE
             if (!empty($password)) {
                 // Jika password baru diisi, HASH password tersebut
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -60,7 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt_update->bind_param("sssi", $username, $email, $role, $user_id_to_edit);
             }
 
-            // Eksekusi query
             if ($stmt_update->execute()) {
                 header("location: kelola_pengguna.php?status=edit_sukses");
                 exit();
@@ -75,8 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// 4. Logika saat halaman DIBUKA (GET)
-// Ambil data lama dari database untuk ditampilkan di form
+
 $sql_get = "SELECT username, email, role FROM users WHERE user_id = ?";
 $stmt_get = $conn->prepare($sql_get);
 $stmt_get->bind_param("i", $user_id_to_edit);
@@ -86,7 +78,6 @@ $result = $stmt_get->get_result();
 if ($result->num_rows > 0) {
     $user = $result->fetch_assoc();
 } else {
-    // Jika ID tidak ditemukan
     header('location: kelola_pengguna.php?status=id_tidak_ditemukan');
     exit();
 }
@@ -129,7 +120,6 @@ $conn->close();
         .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
         .alert-gagal { background-color: #f8d7da; color: #721c24; }
 
-        /* Style untuk Form */
         .form-container {
             max-width: 500px;
             background: white;

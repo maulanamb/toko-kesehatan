@@ -1,12 +1,11 @@
 <?php
-require_once 'cek_admin.php'; // Pastikan satpam aktif
-require_once '../koneksi.php'; // Pastikan $conn
+require_once 'cek_admin.php'; 
+require_once '../koneksi.php'; 
 
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($product_id > 0) {
     
-    // Ubah status produk kembali menjadi 'Aktif'
     $sql_update = "UPDATE products SET status_produk = 'Aktif' WHERE product_id = ?";
     
     $stmt = $conn->prepare($sql_update);

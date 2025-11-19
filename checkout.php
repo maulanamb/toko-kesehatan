@@ -1,35 +1,79 @@
 <?php
 session_start();
+require_once 'koneksi.php';
 
-// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
-$batas_waktu = 1800; // 30 menit (1800 detik)
-
-if (isset($_SESSION['waktu_terakhir_aktif'])) {
-    if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
-        session_unset();
-        session_destroy();
-        // Arahkan ke login dengan pesan
-        header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
-        exit();
+// --- SATPAM (Login & Logout Otomatis) ---
+if (isset($_SESSION['user_id'])) {
+    $batas_waktu = 1800; // 30 menit
+    if (isset($_SESSION['waktu_terakhir_aktif'])) {
+        if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
+            session_unset(); session_destroy();
+            header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir.'));
+            exit();
+        }
     }
-}
-// Reset timer setiap kali halaman dimuat
-$_SESSION['waktu_terakhir_aktif'] = time();
-// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
-
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    $_SESSION['waktu_terakhir_aktif'] = time(); 
+} else {
+    // Jika belum login, paksa ke login
+    header('Location: login.php?error=' . urlencode('Anda harus login untuk checkout.'));
     exit();
 }
-
-require_once 'koneksi.php';
+// --- SELESAI SATPAM ---
 
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
-$role = $_SESSION['role']; // Ambil role untuk navigasi
+$role = $_SESSION['role']; 
 
-// --- 1. Ambil data keranjang (mirip keranjang.php) ---
+// --- 1. LOGIKA CEK STOK OTOMATIS & POP-UP ALERT ▼▼▼ ---
+$stok_aman = true;
+$pesan_alert = "";
+
+// Kita cek stok berdasarkan data di tabel cart_items
+$sql_cek_stok = "SELECT c.product_id, c.quantity, p.product_name, p.stock, p.status_produk 
+                 FROM cart_items c 
+                 JOIN products p ON c.product_id = p.product_id 
+                 WHERE c.user_id = ?";
+$stmt_cek = $conn->prepare($sql_cek_stok);
+$stmt_cek->bind_param("i", $user_id);
+$stmt_cek->execute();
+$result_cek = $stmt_cek->get_result();
+
+if ($result_cek->num_rows == 0) {
+    // Keranjang kosong di database
+    header("Location: keranjang.php?error=Keranjang Anda kosong");
+    exit();
+}
+
+while ($row = $result_cek->fetch_assoc()) {
+    // Cek 1: Apakah produk diarsipkan?
+    if ($row['status_produk'] != 'Aktif') {
+        $stok_aman = false;
+        $pesan_alert = "Maaf, produk '" . $row['product_name'] . "' sedang tidak aktif/diarsipkan.";
+        break;
+    }
+    
+    // Cek 2: Apakah jumlah beli > stok tersedia?
+    if ($row['quantity'] > $row['stock']) {
+        $stok_aman = false;
+        $pesan_alert = "Maaf, stok tidak mencukupi untuk '" . $row['product_name'] . "'. Sisa stok: " . $row['stock'];
+        break; 
+    }
+}
+$stmt_cek->close();
+
+// JIKA ADA MASALAH -> TAMPILKAN POP-UP JS LALU KEMBALI
+if (!$stok_aman) {
+    $conn->close();
+    echo "<script>
+            alert('" . addslashes($pesan_alert) . "');
+            window.location.href = 'keranjang.php';
+          </script>";
+    exit();
+}
+// --- ▲▲▲ SELESAI LOGIKA POP-UP ▲▲▲ ---
+
+
+// 2. Ambil Data Keranjang untuk Tampilan HTML
 $sql_cart = "SELECT p.product_id, p.product_name, p.price, c.quantity
              FROM cart_items c
              JOIN products p ON c.product_id = p.product_id
@@ -41,21 +85,15 @@ $result_cart = $stmt_cart->get_result();
 
 $cart_items = [];
 $total_belanja = 0;
-if ($result_cart->num_rows > 0) {
-    while($row = $result_cart->fetch_assoc()) {
-        $row['subtotal'] = $row['price'] * $row['quantity'];
-        $cart_items[] = $row; // Simpan juga product_id
-        $total_belanja += $row['subtotal'];
-    }
-} else {
-    // Jika keranjang kosong, jangan biarkan checkout
-    header("Location: keranjang.php?error=Keranjang Anda kosong");
-    exit();
+while($row = $result_cart->fetch_assoc()) {
+    $row['subtotal'] = $row['price'] * $row['quantity'];
+    $cart_items[] = $row; 
+    $total_belanja += $row['subtotal'];
 }
 $stmt_cart->close();
 
-// --- 2. Ambil data alamat pengguna ---
-$sql_user = "SELECT address, city, contact_no FROM users WHERE user_id = ?";
+// 3. Ambil Data User untuk Form Default
+$sql_user = "SELECT address, city, contact_no, email FROM users WHERE user_id = ?";
 $stmt_user = $conn->prepare($sql_user);
 $stmt_user->bind_param("i", $user_id);
 $stmt_user->execute();
@@ -63,8 +101,9 @@ $user = $stmt_user->get_result()->fetch_assoc();
 $stmt_user->close();
 $conn->close();
 
-// Gabungkan alamat
-$alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
+// Gabungkan alamat default
+$alamat_pengiriman_default = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
+$alamat_pengiriman_default = trim($alamat_pengiriman_default, ", ");
 ?>
 
 <!DOCTYPE html>
@@ -72,16 +111,21 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout</title>
+    <title>Checkout - Toko Kesehatan</title>
     <link rel="icon" type="image/png" href="images/minilogo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    </head>
+    <style>
+        .navbar-brand img { height: 40px; width: auto; vertical-align: middle; }
+    </style>
+</head>
 <body class="bg-light">
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
+            <a class="navbar-brand fw-bold" href="index.php">
+                 <img src="images/logo.png" alt="Toko Kesehatan Purnama Logo">
+            </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -89,25 +133,17 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="keranjang.php">Keranjang</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="buku_tamu.php">Buku Tamu</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="keranjang.php">Keranjang</a></li>
+                    <li class="nav-item"><a class="nav-link" href="buku_tamu.php">Buku Tamu</a></li>
                     
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        
                         <?php if ($role == 'admin'): ?>
                             <li class="nav-item"><a class="nav-link" href="admin/index.php">Dashboard Admin</a></li>
                             <li class="nav-item"><a class="nav-link text-danger" href="logout.php">Logout</a></li>
-                        
                         <?php elseif ($role == 'vendor'): ?>
                             <li class="nav-item"><a class="nav-link" href="vendor/index.php">Dashboard Vendor</a></li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                    Halo, <?php echo htmlspecialchars($username); ?>
-                                </a>
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">Halo, <?php echo htmlspecialchars($username); ?></a>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                                     <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
@@ -116,12 +152,9 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
                                     <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
                                 </ul>
                             </li>
-
-                        <?php else: // JIKA CUSTOMER BIASA ?>
+                        <?php else: ?>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                    Halo, <?php echo htmlspecialchars($username); ?>
-                                </a>
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">Halo, <?php echo htmlspecialchars($username); ?></a>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="profil.php">Profil Saya</a></li>
                                     <li><a class="dropdown-item" href="riwayat_pesanan.php">Riwayat Pesanan</a></li>
@@ -131,12 +164,12 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
                                 </ul>
                             </li>
                         <?php endif; ?>
-
                     <?php endif; ?>
                 </ul>
             </div>
         </div>
     </nav>
+
     <div class="container my-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="mb-0">Konfirmasi Pesanan</h1>
@@ -152,14 +185,24 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
                             <h2 class="h5 mb-0">Alamat Pengiriman</h2>
                         </div>
                         <div class="card-body">
-                            <p>
-                                <strong><?php echo htmlspecialchars($username); ?></strong><br>
-                                <?php echo htmlspecialchars($user['contact_no'] ?? 'No. Kontak belum diatur'); ?><br>
-                                <?php echo htmlspecialchars($user['address'] ?? 'Alamat belum diatur'); ?><br>
-                                <?php echo htmlspecialchars($user['city'] ?? ''); ?>
-                            </p>
-                            <a href="profil.php">Ubah Alamat di Profil</a>
-                            <input type="hidden" name="shipping_address" value="<?php echo htmlspecialchars($alamat_pengiriman); ?>">
+                            
+                            <div class="mb-3">
+                                <label for="recipient_name" class="form-label">Nama Penerima:</label>
+                                <input type="text" id="recipient_name" name="recipient_name" class="form-control" 
+                                       value="<?php echo htmlspecialchars($username); ?>" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="shipping_address" class="form-label">Alamat Lengkap:</label>
+                                <textarea id="shipping_address" name="shipping_address" class="form-control" rows="3" required><?php echo htmlspecialchars($alamat_pengiriman_default); ?></textarea>
+                                <small class="text-muted">Anda dapat mengubah alamat ini jika ingin mengirim ke lokasi lain.</small>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <p class="mb-1"><strong>Kontak:</strong> <?php echo htmlspecialchars($user['contact_no'] ?? '-'); ?></p>
+                                <p class="mb-1"><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
+                                <a href="profil.php" class="text-decoration-none small">Ubah Data Kontak di Profil</a>
+                            </div>
                         </div>
                     </div>
                     
@@ -169,12 +212,12 @@ $alamat_pengiriman = ($user['address'] ?? '') . ", " . ($user['city'] ?? '');
                         </div>
                         <div class="card-body">
                             <div class="form-check">
-                                <input type="radio" id="prepaid" name="payment_method" value="Prepaid (Credit Card/PayPal)" class="form-check-input" checked required>
-                                <label for="prepaid" class="form-check-label">Prepaid (Credit Card/PayPal)</label>
+                                <input type="radio" id="emoney" name="payment_method" value="Bayar dengan E-Money" class="form-check-input" required>
+                                <label for="emoney" class="form-check-label">Bayar dengan E-Wallet</label>
                             </div>
                             <div class="form-check">
-                                <input type="radio" id="postpaid" name="payment_method" value="Postpaid (Bayar di Tempat)" class="form-check-input">
-                                <label for="postpaid" class="form-check-label">Postpaid (Bayar di Tempat / COD)</label>
+                                <input type="radio" id="cod" name="payment_method" value="Bayar di Tempat (COD)" class="form-check-input" checked required>
+                                <label for="cod" class="form-check-label">Bayar di Tempat (COD)</label>
                             </div>
                         </div>
                     </div>

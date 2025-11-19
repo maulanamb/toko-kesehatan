@@ -1,6 +1,6 @@
 <?php
-require_once 'cek_admin.php'; // Pastikan satpam aktif
-require_once '../koneksi.php'; // Pastikan $conn
+require_once 'cek_admin.php'; 
+require_once '../koneksi.php'; 
 ?>
 
 <!DOCTYPE html>
@@ -10,7 +10,6 @@ require_once '../koneksi.php'; // Pastikan $conn
     <title>Kelola Pesanan</title>
     <link rel="icon" type="image/png" href="../images/minilogo.png"> <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* [CSS Admin Panel Anda yang sama] */
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { width: 250px; background: #0F4A86; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
@@ -31,7 +30,6 @@ require_once '../koneksi.php'; // Pastikan $conn
         th, td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
         th { background-color: #f2f2f2; }
         
-        /* CSS STATUS VENDOR */
         .status-vendor {
             padding: 4px 8px;
             border-radius: 4px;
@@ -43,7 +41,6 @@ require_once '../koneksi.php'; // Pastikan $conn
         .status-approved { background-color: #28a745; }
         .status-rejected { background-color: #dc3545; }
         
-        /* CSS TOMBOL LOGOUT */
         .btn-logout {
             background-color: #dc3545; 
             color: white;
@@ -58,11 +55,9 @@ require_once '../koneksi.php'; // Pastikan $conn
             color: white;
         }
 
-        /* ▼▼▼ 2. TAMBAHKAN CSS BANTUAN ▼▼▼ */
         .table .btn-sm {
             margin: 2px;
         }
-        /* ▲▲▲ SELESAI ▲▲▲ */
     </style>
 </head>
 <body>
@@ -102,7 +97,6 @@ require_once '../koneksi.php'; // Pastikan $conn
             </thead>
             <tbody>
                 <?php
-                // QUERY SQL ANDA
                 $sql = "SELECT 
                             o.order_id, 
                             o.order_date, 
@@ -137,7 +131,6 @@ require_once '../koneksi.php'; // Pastikan $conn
                 if (count($orders) > 0):
                     foreach ($orders as $order):
                         
-                        // LOGIKA STATUS VENDOR
                         if ($order['count_rejected'] > 0) {
                             $vendor_status = "Ditolak Vendor";
                             $vendor_class = "status-rejected";

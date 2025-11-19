@@ -1,15 +1,10 @@
 <?php
-// 1. Set variabel khusus halaman
 $page_title = "Tambah Produk Baru";
 
-// 2. Panggil "Satpam" Vendor
 require_once 'cek_vendor.php'; 
-// Jika lolos, kita akan punya $toko_id_vendor dan $conn
 $pesan_error = "";
 
-// Cek jika form sudah di-submit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil data form
     $nama_produk = $conn->real_escape_string($_POST['nama_produk']);
     $deskripsi = $conn->real_escape_string($_POST['deskripsi']);
     $harga = (float) $_POST['harga'];
@@ -39,7 +34,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     if (empty($pesan_error)) {
-        // Query INSERT menyertakan 'toko_id' dari session
         $query = "INSERT INTO products (product_code, product_name, description, price, stock, category_id, image_url, toko_id) 
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         
@@ -65,7 +59,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Ambil data kategori untuk dropdown (SELECT box)
 $category_query = "SELECT category_id, category_name FROM categories ORDER BY category_name ASC";
 $category_result = $conn->query($category_query);
 
@@ -86,14 +79,14 @@ $conn->close();
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { 
             width: 250px; 
-            background: #0F4A86; /* <-- WARNA ADMIN */
+            background: #0F4A86;
             color: white; 
             min-height: 100vh; 
             padding: 20px; 
             box-sizing: border-box; 
         }
         .sidebar h2 { 
-            border-bottom: 1px solid #555; /* <-- WARNA ADMIN */
+            border-bottom: 1px solid #555;
             padding-bottom: 10px; 
         }
         .sidebar ul { list-style: none; padding: 0; }

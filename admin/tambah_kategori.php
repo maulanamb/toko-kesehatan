@@ -1,22 +1,18 @@
 <?php
 session_start();
 
-// 1. Set variabel khusus halaman
 $page_title = "Tambah Kategori Baru";
 
-// 2. Panggil Satpam
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
 $pesan_error = "";
 $pesan_sukses = "";
 
-// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama_kategori = $conn->real_escape_string($_POST['nama_kategori']);
     
     if (!empty($nama_kategori)) {
-        // Cek duplikat
         $sql_cek = "SELECT category_id FROM categories WHERE category_name = ?";
         $stmt_cek = $conn->prepare($sql_cek);
         $stmt_cek->bind_param("s", $nama_kategori);
@@ -26,7 +22,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result_cek->num_rows > 0) {
             $pesan_error = "Nama kategori tersebut sudah ada.";
         } else {
-            // Insert data baru
             $sql_insert = "INSERT INTO categories (category_name) VALUES (?)";
             $stmt_insert = $conn->prepare($sql_insert);
             $stmt_insert->bind_param("s", $nama_kategori);

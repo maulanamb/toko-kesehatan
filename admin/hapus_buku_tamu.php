@@ -1,6 +1,6 @@
 <?php
-require_once 'cek_admin.php'; // Pastikan satpam aktif
-require_once '../koneksi.php'; // Pastikan $conn
+require_once 'cek_admin.php'; 
+require_once '../koneksi.php'; 
 
 $id_pesan = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 

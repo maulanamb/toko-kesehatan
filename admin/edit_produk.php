@@ -1,26 +1,21 @@
 <?php
 session_start();
 
-// 1. Set variabel khusus halaman
 $page_title = "Edit Produk";
 
-// 2. Panggil Satpam
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
 $pesan_error = "";
 $pesan_sukses = "";
 
-// Ambil ID produk dari URL
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($product_id === 0) {
     header('location: kelola_produk.php?status=id_tidak_valid');
     exit();
 }
 
-// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil data form
     $nama_produk = $conn->real_escape_string($_POST['nama_produk']);
     $deskripsi = $conn->real_escape_string($_POST['deskripsi']);
     $harga = (float) $_POST['harga'];
@@ -51,7 +46,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     if (empty($pesan_error)) {
-        // Query UPDATE
         $sql_update = "UPDATE products SET 
                         product_name = ?,
                         product_code = ?,
@@ -85,7 +79,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// 4. Logika saat halaman DIBUKA (GET)
 $sql_get = "SELECT * FROM products WHERE product_id = ?";
 $stmt_get = $conn->prepare($sql_get);
 $stmt_get->bind_param("i", $product_id);
@@ -100,7 +93,6 @@ if ($result->num_rows > 0) {
 }
 $stmt_get->close();
 
-// Ambil data kategori untuk dropdown
 $category_query = "SELECT category_id, category_name FROM categories ORDER BY category_name ASC";
 $category_result = $conn->query($category_query);
 

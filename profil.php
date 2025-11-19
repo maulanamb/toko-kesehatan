@@ -1,24 +1,19 @@
 <?php
 session_start();
 
-// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
 $batas_waktu = 1800; // 30 menit (1800 detik)
 
 if (isset($_SESSION['waktu_terakhir_aktif'])) {
     if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
         session_unset();
         session_destroy();
-        // Arahkan ke login dengan pesan
         header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
         exit();
     }
 }
-// Reset timer setiap kali halaman dimuat
 $_SESSION['waktu_terakhir_aktif'] = time();
-// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
 
 
-// 1. Cek Login (Satpam Customer)
 if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role'] == 'admin')) {
     header("Location: login.php?error=Silakan login sebagai pelanggan.");
     exit();
@@ -27,9 +22,8 @@ if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role
 require_once 'koneksi.php';
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
-$role = $_SESSION['role']; // Ambil role
+$role = $_SESSION['role'];
 
-// 2. Ambil data profil lengkap pengguna
 $sql = "SELECT username, email, date_of_birth, gender, address, city, contact_no, paypal_id 
         FROM users 
         WHERE user_id = ?";
@@ -46,7 +40,6 @@ if (!$user) {
     die("Error: Data pengguna tidak ditemukan.");
 }
 
-// 3. Ambil pesan sukses/error dari URL
 $pesan_sukses = $_GET['sukses'] ?? '';
 $pesan_error = $_GET['error'] ?? '';
 ?>
@@ -63,14 +56,14 @@ $pesan_error = $_GET['error'] ?? '';
 
     <style>
         .navbar-brand {
-            padding-top: 0; /* Hapus padding-top default */
-            padding-bottom: 0; /* Hapus padding-bottom default */
-            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
+            padding-top: 0; 
+            padding-bottom: 0;
+            margin-right: 0.5rem;
         }
         .navbar-brand img {
-            height: 80px; /* Ukuran logo yang lebih terlihat */
+            height: 80px;
             width: auto;
-            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
+            vertical-align: middle; 
         }   
     </style>
     
@@ -117,7 +110,7 @@ $pesan_error = $_GET['error'] ?? '';
                                 </ul>
                             </li>
 
-                        <?php else: // JIKA CUSTOMER BIASA ?>
+                        <?php else:  ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                     Halo, <?php echo htmlspecialchars($username); ?>
@@ -141,7 +134,7 @@ $pesan_error = $_GET['error'] ?? '';
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 
-                <h1 class="mb-4">Profil Saya</h1>
+                <h1 class="mb-4 text-center">Profil Saya</h1>
 
                 <?php if (!empty($pesan_sukses)): ?>
                     <div class="alert alert-success"><?php echo htmlspecialchars(urldecode($pesan_sukses)); ?></div>
@@ -158,8 +151,8 @@ $pesan_error = $_GET['error'] ?? '';
                         <form action="profil_update.php" method="POST">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Username:</label>
-                                <input type="text" id="username" name="username" class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
-                                <div class="form-text">Username tidak bisa diubah.</div>
+                                <input type="text" id="username" name="username" class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>">
+                                <div class="form-text"></div>
                             </div>
                             <div class="mb-3">
                                 <label for="email" class="form-label">E-mail:</label>

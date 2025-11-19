@@ -1,31 +1,22 @@
 <?php
-// 1. Set variabel khusus halaman
 $page_title = "Dashboard"; 
 
-// 2. Panggil Satpam
 require_once 'cek_admin.php'; 
-require_once '../koneksi.php'; // Panggil koneksi
+require_once '../koneksi.php'; 
 
-// --- ▼▼▼ 3. AMBIL DATA UNTUK KARTU ▼▼▼ ---
-
-// 1. Hitung Jumlah Pesanan (yang tidak dibatalkan)
 $result_pesanan = $conn->query("SELECT COUNT(order_id) as total_pesanan FROM orders WHERE status != 'Dibatalkan'");
 $total_pesanan = $result_pesanan->fetch_assoc()['total_pesanan'];
 
-// 2. Hitung Jumlah Produk (yang aktif)
 $result_produk = $conn->query("SELECT COUNT(product_id) as total_produk FROM products WHERE status_produk = 'Aktif'");
 $total_produk = $result_produk->fetch_assoc()['total_produk'];
 
-// 3. Hitung Jumlah Kategori
 $result_kategori = $conn->query("SELECT COUNT(category_id) as total_kategori FROM categories");
 $total_kategori = $result_kategori->fetch_assoc()['total_kategori'];
 
-// 4. Hitung Jumlah User (Hanya customer dan vendor)
 $result_user = $conn->query("SELECT COUNT(user_id) as total_user FROM users WHERE role != 'admin'");
 $total_user = $result_user->fetch_assoc()['total_user'];
 
 $conn->close();
-// --- ▲▲▲ SELESAI AMBIL DATA ▲▲▲ ---
 ?>
 
 <!DOCTYPE html>
@@ -60,10 +51,9 @@ $conn->close();
         }
         .btn-logout:hover { background-color: #bb2d3b; color: white; }
 
-        /* ▼▼▼ 4. CSS BARU UNTUK KARTU DASHBOARD ▼▼▼ */
         .kpi-container {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 4 kolom */
+            grid-template-columns: repeat(4, 1fr); 
             gap: 20px;
             margin-top: 20px;
         }
@@ -83,10 +73,9 @@ $conn->close();
         .kpi-card .nilai {
             font-size: 2.5em;
             font-weight: bold;
-            color: #0d6efd; /* Biru Primer */
+            color: #0d6efd; 
         }
         
-        /* Responsive untuk HP (susun ke bawah) */
         @media (max-width: 992px) {
             .kpi-container {
                 grid-template-columns: repeat(2, 1fr); /* 2 kolom di tablet */
@@ -97,7 +86,6 @@ $conn->close();
                 grid-template-columns: 1fr; /* 1 kolom di HP */
             }
         }
-        /* ▲▲▲ SELESAI ▲▲▲ */
     </style>
 </head>
 <body>

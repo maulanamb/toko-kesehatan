@@ -1,22 +1,20 @@
 <?php
-// 1. Set variabel khusus halaman
+
 $page_title = "Edit Produk";
 
-// 2. Panggil "Satpam" Vendor
+
 require_once 'cek_vendor.php'; 
-// Jika lolos, kita akan punya $toko_id_vendor dan $conn
+
 $pesan_error = "";
 
-// Ambil ID produk dari URL
+
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($product_id === 0) {
     header('location: kelola_produk.php?status=id_tidak_valid');
     exit();
 }
 
-// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil data form
     $nama_produk = $conn->real_escape_string($_POST['nama_produk']);
     $deskripsi = $conn->real_escape_string($_POST['deskripsi']);
     $harga = (float) $_POST['harga'];
@@ -26,7 +24,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $image_url_baru = $gambar_lama; 
 
-    // PROSES UPLOAD GAMBAR BARU (JIKA ADA)
     if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] === UPLOAD_ERR_OK) {
         $file_tmp = $_FILES['gambar']['tmp_name'];
         $file_name = basename($_FILES['gambar']['name']);
@@ -45,7 +42,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     if (empty($pesan_error)) {
-        // Query UPDATE
         $sql_update = "UPDATE products SET 
                         product_name = ?,
                         description = ?,
@@ -54,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         category_id = ?,
                         image_url = ?
                     WHERE 
-                        product_id = ? AND toko_id = ?"; // <-- Keamanan
+                        product_id = ? AND toko_id = ?"; 
         
         $stmt = $conn->prepare($sql_update);
         $stmt->bind_param("ssdiisii", 
@@ -78,7 +74,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// 4. Logika saat halaman DIBUKA (GET)
 $sql_get = "SELECT * FROM products WHERE product_id = ? AND toko_id = ?";
 $stmt_get = $conn->prepare($sql_get);
 $stmt_get->bind_param("ii", $product_id, $toko_id_vendor);
@@ -87,7 +82,6 @@ $result = $stmt_get->get_result();
 
 if ($result->num_rows > 0) {
     $product = $result->fetch_assoc();
-    // Update judul halaman
     $page_title = "Edit Produk: " . $product['product_name'];
 } else {
     header('location: kelola_produk.php?status=gagal&error=Produk tidak ditemukan');
@@ -95,7 +89,6 @@ if ($result->num_rows > 0) {
 }
 $stmt_get->close();
 
-// Ambil data kategori untuk dropdown
 $category_query = "SELECT category_id, category_name FROM categories ORDER BY category_name ASC";
 $category_result = $conn->query($category_query);
 
@@ -116,14 +109,14 @@ $conn->close();
         body { font-family: sans-serif; display: flex; margin: 0; }
         .sidebar { 
             width: 250px; 
-            background: #0F4A86; /* <-- WARNA ADMIN */
+            background: #0F4A86; 
             color: white; 
             min-height: 100vh; 
             padding: 20px; 
             box-sizing: border-box; 
         }
         .sidebar h2 { 
-            border-bottom: 1px solid #555; /* <-- WARNA ADMIN */
+            border-bottom: 1px solid #555;
             padding-bottom: 10px; 
         }
         .sidebar ul { list-style: none; padding: 0; }
@@ -178,7 +171,6 @@ $conn->close();
         .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
         .alert-gagal { background-color: #f8d7da; color: #721c24; }
         
-        /* Style untuk Form */
         .form-container {
             max-width: 700px;
             background: white;

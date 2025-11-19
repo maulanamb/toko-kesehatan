@@ -1,10 +1,8 @@
 <?php
 session_start();
 
-// 1. Set variabel khusus halaman
 $page_title = "Kelola Kategori";
 
-// 2. Panggil Satpam
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 ?>
@@ -74,11 +72,9 @@ require_once '../koneksi.php';
             text-align: center !important; 
         }
         
-        /* ▼▼▼ 1. TAMBAHKAN CSS INI ▼▼▼ */
         .btn-aksi {
-            min-width: 75px; /* Atur lebar minimum tombol (sesuaikan 75px jika perlu) */
+            min-width: 75px; 
         }
-        /* ▲▲▲ SELESAI ▲▲▲ */
     </style>
 </head>
 <body>
@@ -105,7 +101,7 @@ require_once '../koneksi.php';
         </div>
         
         <?php
-        // ... (Blok Notifikasi Anda) ...
+        
         ?>
 
         <a href="tambah_kategori.php" class="btn btn-primary">Tambah Kategori Baru</a>

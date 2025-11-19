@@ -1,14 +1,12 @@
 <?php
-// 1. Memanggil file koneksi.php
-require_once 'koneksi.php'; // $conn akan tersedia dari sini
+require_once 'koneksi.php'; 
 
 $pesan_sukses = "";
 $pesan_error = "";
 
-// 2. Cek apakah form sudah di-submit (ditekan tombol "Submit")
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // 3. Ambil semua data dari form (Validasi sederhana)
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     $retype_password = $_POST['retype_password'] ?? '';
@@ -20,14 +18,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $contact_no = $_POST['contact_no'] ?? '';
     $paypal_id = $_POST['paypal_id'] ?? '';
 
-    // 4. Validasi Sederhana
     if (empty($username) || empty($password) || empty($email)) {
         $pesan_error = "Username, Password, dan E-mail wajib diisi.";
     } elseif ($password !== $retype_password) {
         $pesan_error = "Password dan Retype-Password tidak cocok.";
     } else {
         
-        // 5. Cek apakah username atau email sudah ada
         $sql_cek = "SELECT * FROM users WHERE username = ? OR email = ?";
         $stmt_cek = $conn->prepare($sql_cek);
         $stmt_cek->bind_param("ss", $username, $email);
@@ -38,16 +34,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $pesan_error = "Username atau E-mail sudah terdaftar.";
         } else {
             
-            // 6. HASH PASSWORD (KRITIS!)
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            // 7. Siapkan query INSERT (Gunakan Prepared Statement)
             $sql = "INSERT INTO users (username, password, email, date_of_birth, gender, address, city, contact_no, paypal_id) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
             $stmt = $conn->prepare($sql);
             
-            // 's' = string, 's' = date (sebagai string)
             $stmt->bind_param("sssssssss", 
                 $username, 
                 $hashed_password, 
@@ -60,7 +53,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $paypal_id
             );
 
-            // 8. Eksekusi query
             if ($stmt->execute()) {
                 $pesan_sukses = "Registrasi berhasil! Silakan <a href='login.php' class='alert-link'>login</a>.";
             } else {

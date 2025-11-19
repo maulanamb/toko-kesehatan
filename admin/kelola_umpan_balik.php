@@ -1,10 +1,8 @@
 <?php
-// 1. Set variabel khusus halaman
 $page_title = "Kelola Umpan Balik";
 
-// 2. Panggil Satpam & Header
 require_once 'cek_admin.php'; 
-require_once '../koneksi.php'; // Panggil koneksi
+require_once '../koneksi.php'; 
 ?>
 
 <!DOCTYPE html>

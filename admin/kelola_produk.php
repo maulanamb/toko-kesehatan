@@ -1,10 +1,8 @@
 <?php
-// 1. Set variabel khusus halaman
 $page_title = "Kelola Produk";
 
-// 2. Panggil Satpam & Header
 require_once 'cek_admin.php'; 
-require_once '../koneksi.php'; // Panggil koneksi
+require_once '../koneksi.php'; 
 ?>
 
 <!DOCTYPE html>
@@ -106,7 +104,7 @@ require_once '../koneksi.php'; // Panggil koneksi
                 echo "<div class='alert alert-sukses'>Produk berhasil diperbarui.</div>";
             } else if($status == 'hapus_sukses') {
                 echo "<div class='alert alert-sukses'>Produk berhasil diarsipkan.</div>";
-            } else if($status == 'aktif_sukses') { // <-- TAMBAHAN BARU
+            } else if($status == 'aktif_sukses') { 
                 echo "<div class='alert alert-sukses'>Produk berhasil diaktifkan kembali.</div>";
             } else if($status == 'id_tidak_valid') {
                 echo "<div class='alert alert-info'>ID Produk tidak valid.</div>";

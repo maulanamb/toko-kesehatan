@@ -2,38 +2,37 @@
 session_start();
 
 // --- LOGIKA LOGOUT OTOMATIS (VERSI PELANGGAN/PUBLIK YANG BENAR) ---
-// Cek HANYA jika pengguna sudah login. Jangan blokir visitor!
 if (isset($_SESSION['user_id'])) {
     $batas_waktu = 1800; // 30 menit
     if (isset($_SESSION['waktu_terakhir_aktif'])) {
         if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
             session_unset();
             session_destroy();
-            // Arahkan ke login dengan pesan
             header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
             exit();
         }
     }
-    // Reset timer setiap kali halaman dimuat
     $_SESSION['waktu_terakhir_aktif'] = time();
 }
 // --- SELESAI LOGIKA LOGOUT ---
 
-
 require_once 'koneksi.php'; // Pastikan $conn
+
+// Ambil pesan notifikasi dari URL (jika ada)
+$pesan_error = $_GET['error'] ?? '';
+$pesan_sukses = $_GET['sukses'] ?? '';
 
 // --- 1. Logika untuk Kategori (Filter) ---
 $sql_kategori = "SELECT category_id, category_name FROM categories ORDER BY category_name ASC";
 $result_kategori = $conn->query($sql_kategori);
 $kategori_list = $result_kategori->fetch_all(MYSQLI_ASSOC);
 
-// Ambil kategori yang dipilih (jika ada)
 $kategori_dipilih = isset($_GET['kategori']) ? (int)$_GET['kategori'] : 0;
-$nama_kategori_aktif = "Semua Produk"; // Default
+$nama_kategori_aktif = "Semua Produk"; 
 
 // --- 2. Logika untuk Sortir ---
-$sort_option = $_GET['sort'] ?? 'terbaru'; // Default 'terbaru'
-$order_by_sql = "ORDER BY p.product_id DESC"; // Default
+$sort_option = $_GET['sort'] ?? 'terbaru'; 
+$order_by_sql = "ORDER BY p.product_id DESC"; 
 
 if ($sort_option == 'harga_asc') {
     $order_by_sql = "ORDER BY p.price ASC";
@@ -47,7 +46,6 @@ if ($sort_option == 'harga_asc') {
 $sql_params = [];
 $sql_param_types = "";
 
-// Query dasar: Ambil produk yang stoknya > 0 DAN sudah disetujui (toko_id NULL ATAU status toko 'approved')
 $sql_produk = "SELECT p.product_id, p.product_name, p.price, p.image_url, p.stock 
                FROM products p 
                LEFT JOIN toko t ON p.toko_id = t.toko_id
@@ -55,13 +53,11 @@ $sql_produk = "SELECT p.product_id, p.product_name, p.price, p.image_url, p.stoc
                AND (p.toko_id IS NULL OR t.status = 'approved')
                AND p.status_produk = 'Aktif'"; 
 
-// Tambahkan filter kategori JIKA dipilih
 if ($kategori_dipilih > 0) {
     $sql_produk .= " AND p.category_id = ?";
     $sql_params[] = $kategori_dipilih;
     $sql_param_types .= "i";
     
-    // Ambil nama kategori untuk judul
     foreach ($kategori_list as $kat) {
         if ($kat['category_id'] == $kategori_dipilih) {
             $nama_kategori_aktif = $kat['category_name'];
@@ -70,10 +66,8 @@ if ($kategori_dipilih > 0) {
     }
 }
 
-// Tambahkan sorting
 $sql_produk .= " " . $order_by_sql;
 
-// Eksekusi query
 $stmt = $conn->prepare($sql_produk);
 if ($kategori_dipilih > 0) {
     $stmt->bind_param($sql_param_types, ...$sql_params);
@@ -91,38 +85,36 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($nama_kategori_aktif); ?></title>
+    <title><?php echo htmlspecialchars($nama_kategori_aktif); ?> - Toko Kesehatan Purnama</title>
     <link rel="icon" type="image/png" href="images/minilogo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <style>
-        body{
+        body {
             background-color: #F4F5F7;
         }
-        .navbar{
+        .navbar {
             background-color: #f8f8ff;
         }
         .navbar-brand {
-            padding-top: 0; /* Hapus padding-top default */
-            padding-bottom: 0; /* Hapus padding-bottom default */
-            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
+            padding-top: 0; 
+            padding-bottom: 0; 
+            margin-right: 0.5rem; 
         }
         .navbar-brand img {
-            height: 80px; /* Ukuran logo yang lebih terlihat */
+            height: 80px; 
             width: auto;
-            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
+            vertical-align: middle; 
         }   
         .card-img-top {
             width: 100%;
             height: 200px;
-            /* ▼▼▼ PERBAIKAN: Ganti 'cover' menjadi 'contain' ▼▼▼ */
             object-fit: contain; 
-            /* ▲▲▲ SELESAI ▲▲▲ */
         }
         .sidebar-kategori .list-group-item.active {
-            background-color: ##0d6efd;
-            border-color: ##0d6efd;
+            background-color: #0d6efd;
+            border-color: #0d6efd;
         }
     </style>
 </head>
@@ -179,6 +171,17 @@ $conn->close();
     </nav>
 
     <div class="container my-5">
+        
+        <?php if (!empty($pesan_error)): ?>
+            <div class="alert alert-danger" role="alert">
+                <?php echo htmlspecialchars(urldecode($pesan_error)); ?>
+            </div>
+        <?php endif; ?>
+        <?php if (!empty($pesan_sukses)): ?>
+            <div class="alert alert-success" role="alert">
+                <?php echo htmlspecialchars(urldecode($pesan_sukses)); ?>
+            </div>
+        <?php endif; ?>
         <div class="row">
             
             <div class="col-lg-3 sidebar-kategori mb-4">

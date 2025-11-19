@@ -1,19 +1,19 @@
 <?php
-require_once 'cek_admin.php'; // Pastikan satpam aktif
-require_once '../koneksi.php'; // Pastikan $conn
+require_once 'cek_admin.php'; 
+require_once '../koneksi.php'; 
 
-// 1. Set variabel khusus halaman
+
 $page_title = "Laporan Bulanan";
 
-// Tentukan bulan & tahun yang akan ditampilkan
+
 $bulan_dipilih = $_POST['bulan'] ?? date('m');
 $tahun_dipilih = $_POST['tahun'] ?? date('Y');
 
-// Buat rentang tanggal untuk query SQL
+
 $tanggal_awal = "$tahun_dipilih-$bulan_dipilih-01 00:00:00";
 $tanggal_akhir = date("Y-m-t 23:59:59", strtotime($tanggal_awal));
 
-// --- 1. Query untuk KPI ---
+
 $sql_kpi = "SELECT 
                 SUM(total_amount) as total_pendapatan, 
                 COUNT(order_id) as jumlah_pesanan
@@ -30,7 +30,6 @@ $stmt_kpi->close();
 $total_pendapatan = $result_kpi['total_pendapatan'] ?? 0;
 $jumlah_pesanan = $result_kpi['jumlah_pesanan'] ?? 0;
 
-// --- 2. Query untuk Produk Terjual (Semua) ---
 $sql_produk = "SELECT 
                    p.product_name, 
                    SUM(od.quantity) as total_terjual

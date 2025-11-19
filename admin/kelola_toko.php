@@ -1,8 +1,7 @@
 <?php
-require_once 'cek_admin.php'; // Pastikan satpam aktif
-require_once '../koneksi.php'; // Pastikan $conn
+require_once 'cek_admin.php';
+require_once '../koneksi.php'; 
 
-// 1. Set variabel khusus halaman
 $page_title = "Kelola Toko (Vendor)";
 ?>
 
@@ -35,15 +34,13 @@ $page_title = "Kelola Toko (Vendor)";
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
         th { background-color: #f2f2f2; }
-        
-        /* CSS TOMBOL LOGOUT */
+    
         .btn-logout {
             background-color: #dc3545; color: white; padding: 8px 12px;
             text-decoration: none; border-radius: 5px; font-weight: bold;
         }
         .btn-logout:hover { background-color: #bb2d3b; color: white; }
 
-        /* CSS BANTUAN */
         .table .btn-sm {
             margin: 2px;
         }
@@ -51,7 +48,6 @@ $page_title = "Kelola Toko (Vendor)";
             text-align: center !important;
         }
         
-        /* CSS STATUS (Disalin dari kelola_pesanan) */
         .status-pending { color: #ffc107; font-weight: bold; }
         .status-approved { color: #28a745; font-weight: bold; }
         .status-rejected { color: #dc3545; font-weight: bold; }

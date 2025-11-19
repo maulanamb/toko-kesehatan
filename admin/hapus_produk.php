@@ -1,21 +1,18 @@
 <?php
-require_once 'cek_admin.php'; // Pastikan satpam aktif
-require_once '../koneksi.php'; // Pastikan $conn
+require_once 'cek_admin.php'; 
+require_once '../koneksi.php'; 
 
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($product_id > 0) {
     
-    // ▼▼▼ PERUBAHAN LOGIKA DARI DELETE KE UPDATE (SOFT DELETE) ▼▼▼
     $sql_update = "UPDATE products SET status_produk = 'Diarsip' WHERE product_id = ?";
-    // ▲▲▲ SELESAI ▲▲▲
     
     $stmt = $conn->prepare($sql_update);
     $stmt->bind_param("i", $product_id);
     
     if ($stmt->execute()) {
-        header('location: kelola_produk.php?status=hapus_sukses'); // Pesan "hapus" tetap kita gunakan
-        exit();
+        header('location: kelola_produk.php?status=hapus_sukses'); 
     } else {
         $error = urlencode($conn->error);
         header("location: kelola_produk.php?status=hapus_gagal&error={$error}");

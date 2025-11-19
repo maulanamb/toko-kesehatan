@@ -1,21 +1,17 @@
 <?php
 session_start();
 
-// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
 $batas_waktu = 1800; // 30 menit (1800 detik)
 
 if (isset($_SESSION['waktu_terakhir_aktif'])) {
     if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
         session_unset();
         session_destroy();
-        // Arahkan ke login dengan pesan
         header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
         exit();
     }
 }
-// Reset timer setiap kali halaman dimuat
 $_SESSION['waktu_terakhir_aktif'] = time();
-// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
 
 
 if (!isset($_SESSION['user_id'])) {
@@ -23,11 +19,9 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Ambil username untuk navbar
 $username = $_SESSION['username'] ?? 'Pelanggan';
-$role = $_SESSION['role'] ?? 'customer'; // <-- AMBIL ROLE
+$role = $_SESSION['role'] ?? 'customer'; 
 
-// $pdf_file_path akan berisi "invoices/invoice_order_X.pdf"
 $order_id = $_GET['order_id'] ?? 'N/A';
 $pdf_file_path = $_GET['pdf'] ?? '';
 ?>
@@ -42,12 +36,26 @@ $pdf_file_path = $_GET['pdf'] ?? '';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+         .navbar-brand {
+            padding-top: 0; 
+            padding-bottom: 0;
+            margin-right: 0.5rem;
+        }
+        .navbar-brand img {
+            height: 80px;
+            width: auto;
+            vertical-align: middle; 
+        }   
+    </style>
     </head>
 <body class="bg-light">
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php">Toko Kesehatan</a>
+            <a class="navbar-brand" href="order_sukses.php">
+                <img src="images/logo.png" alt="Toko Kesehatan Purnama Logo">
+            </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -83,7 +91,7 @@ $pdf_file_path = $_GET['pdf'] ?? '';
                                 </ul>
                             </li>
 
-                        <?php else: // JIKA CUSTOMER BIASA ?>
+                        <?php else:  ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                     Halo, <?php echo htmlspecialchars($username); ?>
@@ -114,10 +122,9 @@ $pdf_file_path = $_GET['pdf'] ?? '';
                         <h1 class="h2 text-success mt-3">Pesanan Berhasil!</h1>
                         <p class="lead">Terima kasih atas pembelian Anda.</p>
                         <p>Nomor Order Anda adalah: <strong>#<?php echo htmlspecialchars($order_id); ?></strong></p>
-                        <p>Laporan pembelian Anda dalam bentuk PDF telah berhasil dibuat.</p>
+                        <p>Laporan pembelian Anda dalam bentuk PDF telah berhasil dibuat. Silakan cek email anda!</p>
                         
                         <?php
-                        // Cek file menggunakan path fisik di server
                         $path_fisik_file = __DIR__ . '/' . $pdf_file_path;
                         
                         if (!empty($pdf_file_path) && file_exists($path_fisik_file)):

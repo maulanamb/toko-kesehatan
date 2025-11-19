@@ -102,7 +102,7 @@ foreach ($items as $item) {
     
     <style>
         body { font-family: sans-serif; display: flex; margin: 0; }
-        .sidebar { width: 250px; background: #0F4A86; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .sidebar { width: 250px; background: #333; color: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .sidebar h2 { border-bottom: 1px solid #555; padding-bottom: 10px; }
         .sidebar ul { list-style: none; padding: 0; }
         .sidebar ul li { margin: 15px 0; }
@@ -181,7 +181,7 @@ foreach ($items as $item) {
         <div class="header">
             <h1><?php echo htmlspecialchars($page_title); ?></h1>
             <a href="kelola_pesanan.php" class="btn btn-danger">&laquo; Kembali ke Daftar Pesanan</a>
-            </div>
+        </div>
 
         <?php
         if (!empty($pesan_sukses)) echo "<div class='alert alert-sukses'>$pesan_sukses</div>";
@@ -191,7 +191,7 @@ foreach ($items as $item) {
         <div class="update-status">
             <h3>Update Status Pesanan Utama</h3>
             
-            <?php if (!$semua_item_disetujui): // JIKA ADA ITEM PENDING/REJECTED ?>
+            <?php if (!$semua_item_disetujui): ?>
                 <div class="alert alert-info">
                     <strong>Tindakan Dibutuhkan:</strong> Anda baru bisa mengubah status pesanan ini menjadi "Dikirim" atau "Selesai" setelah semua item disetujui oleh vendor terkait.
                     <?php if ($ada_item_ditolak) echo "<br><strong>PERINGATAN:</strong> Ada item yang DITOLAK oleh vendor. Anda mungkin perlu menghubungi pelanggan."; ?>
@@ -202,13 +202,15 @@ foreach ($items as $item) {
                 <div class="form-group">
                     <label for="status_pesanan">Status Saat Ini:</label>
                     <select name="status_pesanan" id="status_pesanan" class="form-select w-auto d-inline-block">
-                        <option value="Paid" <?php echo ($order['status'] == 'Paid') ? 'selected' : ''; ?>>Paid (Menunggu Persetujuan Vendor)</option>
-                        <option value="Diproses" <?php echo ($order['status'] == 'Diproses') ? 'selected' : ''; ?>>Diproses (Semua Vendor Setuju)</option>
+                        
+                        <option value="Pending" <?php echo ($order['status'] == 'Pending') ? 'selected' : ''; ?>>Pending (Menunggu Pembayaran)</option>
+                        <option value="Paid" <?php echo ($order['status'] == 'Paid') ? 'selected' : ''; ?>>Paid (Sudah Dibayar)</option>
+                        <option value="Diproses" <?php echo ($order['status'] == 'Diproses') ? 'selected' : ''; ?>>Diproses (Sedang Siapkan)</option>
                         <option value="Dikirim" <?php echo ($order['status'] == 'Dikirim') ? 'selected' : ''; ?> 
-                            <?php if (!$semua_item_disetujui) echo 'disabled'; // <-- Kunci Logika ?>
+                            <?php if (!$semua_item_disetujui) echo 'disabled'; ?>
                         >Dikirim</option>
                         <option value="Selesai" <?php echo ($order['status'] == 'Selesai') ? 'selected' : ''; ?>
-                            <?php if (!$semua_item_disetujui) echo 'disabled'; // <-- Kunci Logika ?>
+                            <?php if (!$semua_item_disetujui) echo 'disabled'; ?>
                         >Selesai</option>
                         <option value="Dibatalkan" <?php echo ($order['status'] == 'Dibatalkan') ? 'selected' : ''; ?>>Dibatalkan</option>
                     </select>
@@ -220,6 +222,7 @@ foreach ($items as $item) {
         <div class="order-details">
             <h3>Detail Pelanggan & Pengiriman</h3>
             <p><strong>Nama Pelanggan:</strong> <?php echo htmlspecialchars($order['username']); ?></p>
+            <p><strong>Nama Penerima:</strong> <?php echo htmlspecialchars($order['recipient_name'] ?? $order['username']); ?></p>
             <p><strong>Email:</strong> <?php echo htmlspecialchars($order['email']); ?></p>
             <p><strong>No. Kontak:</strong> <?php echo htmlspecialchars($order['contact_no'] ?? '-'); ?></p>
             <p><strong>Alamat Kirim:</strong> <?php echo nl2br(htmlspecialchars($order['shipping_address'] ?? 'Alamat tidak tersedia')); ?></p>
@@ -227,7 +230,8 @@ foreach ($items as $item) {
 
         <div class="order-items">
             <h3>Item Produk dalam Pesanan Ini</h3>
-            <table class="table table-bordered table-hover"> <thead>
+            <table class="table table-bordered table-hover"> 
+                <thead>
                     <tr>
                         <th>Produk</th>
                         <th>Penjual (Vendor)</th>

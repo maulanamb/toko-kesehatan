@@ -1,8 +1,6 @@
 <?php
-// 1. Set variabel khusus halaman
 $page_title = "Detail Pendaftaran Toko";
 
-// 2. Panggil Satpam
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
@@ -12,7 +10,6 @@ if ($toko_id === 0) {
     exit();
 }
 
-// Ambil data toko DAN data pemiliknya
 $sql = "SELECT t.*, u.username, u.email, u.contact_no as kontak_pemilik 
         FROM toko t 
         JOIN users u ON t.user_id = u.user_id 
@@ -31,7 +28,6 @@ $toko = $result->fetch_assoc();
 $stmt->close();
 $conn->close();
 
-// Update judul halaman dengan nama toko
 $page_title = "Detail Toko: " . $toko['nama_toko'];
 ?>
 

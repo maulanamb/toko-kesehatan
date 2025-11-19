@@ -1,20 +1,17 @@
 <?php
-require_once 'cek_admin.php'; // Pastikan satpam aktif
-require_once '../koneksi.php'; // Pastikan $conn
+require_once 'cek_admin.php'; 
+require_once '../koneksi.php'; 
 
-// 1. Ambil data dari URL
 $toko_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 if ($toko_id > 0 && ($action == 'approve' || $action == 'reject')) {
 
-    // Mulai Transaksi
     $conn->begin_transaction();
     
     try {
         $new_status = ($action == 'approve') ? 'approved' : 'rejected';
 
-        // 2. Update status di tabel 'toko'
         $sql_toko = "UPDATE toko SET status = ? WHERE toko_id = ?";
         $stmt_toko = $conn->prepare($sql_toko);
         $stmt_toko->bind_param("si", $new_status, $toko_id);
@@ -25,9 +22,7 @@ if ($toko_id > 0 && ($action == 'approve' || $action == 'reject')) {
         }
         $stmt_toko->close();
 
-        // 3. JIKA DISETUJUI, ubah role user menjadi 'vendor'
         if ($action == 'approve') {
-            // Ambil dulu user_id dari toko_id
             $sql_get_user = "SELECT user_id FROM toko WHERE toko_id = ?";
             $stmt_get_user = $conn->prepare($sql_get_user);
             $stmt_get_user->bind_param("i", $toko_id);
@@ -39,7 +34,6 @@ if ($toko_id > 0 && ($action == 'approve' || $action == 'reject')) {
             $user_id = $result_user->fetch_assoc()['user_id'];
             $stmt_get_user->close();
             
-            // Update role di tabel 'users'
             $sql_user = "UPDATE users SET role = 'vendor' WHERE user_id = ?";
             $stmt_user = $conn->prepare($sql_user);
             $stmt_user->bind_param("i", $user_id);
@@ -51,20 +45,17 @@ if ($toko_id > 0 && ($action == 'approve' || $action == 'reject')) {
             $stmt_user->close();
         }
         
-        // 4. Commit transaksi
         $conn->commit();
         header("Location: kelola_toko.php?status={$action}_sukses");
         exit();
 
     } catch (Exception $e) {
-        // 5. Rollback jika ada error
         $conn->rollback();
         header("Location: kelola_toko.php?status=gagal&error=" . urlencode($e->getMessage()));
         exit();
     }
 
 } else {
-    // Jika ID atau aksi tidak valid
     header('location: kelola_toko.php');
     exit();
 }

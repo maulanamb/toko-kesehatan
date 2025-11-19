@@ -1,21 +1,15 @@
 <?php
-// 1. Set variabel khusus halaman
 $page_title = "Dashboard Vendor";
 
-// 2. Panggil "Satpam" Vendor
 require_once 'cek_vendor.php'; 
-// Jika lolos, kita akan punya $toko_id_vendor, $nama_toko_vendor, dan $conn
 
-// --- ▼▼▼ 3. AMBIL DATA UNTUK KARTU VENDOR ▼▼▼ ---
 
-// 1. Hitung Jumlah Produk (hanya milik vendor ini)
 $stmt_produk = $conn->prepare("SELECT COUNT(product_id) as total_produk FROM products WHERE toko_id = ? AND status_produk = 'Aktif'");
 $stmt_produk->bind_param("i", $toko_id_vendor);
 $stmt_produk->execute();
 $total_produk_vendor = $stmt_produk->get_result()->fetch_assoc()['total_produk'];
 $stmt_produk->close();
 
-// 2. Hitung Jumlah Pesanan (item pesanan milik vendor ini)
 $stmt_pesanan = $conn->prepare(
     "SELECT COUNT(od.order_detail_id) as total_pesanan
      FROM order_details od
@@ -29,7 +23,6 @@ $total_pesanan_vendor = $stmt_pesanan->get_result()->fetch_assoc()['total_pesana
 $stmt_pesanan->close();
 
 $conn->close();
-// --- ▲▲▲ SELESAI AMBIL DATA ▲▲▲ ---
 ?>
 
 <!DOCTYPE html>
@@ -107,7 +100,6 @@ $conn->close();
             color: white !important;
         }
 
-        /* ▼▼▼ 4. CSS KARTU (Sama seperti Admin, tapi 2 kolom) ▼▼▼ */
         .kpi-container {
             display: grid;
             /* 2 kolom saja */
@@ -139,7 +131,6 @@ $conn->close();
                 grid-template-columns: 1fr; /* 1 kolom di HP */
             }
         }
-        /* ▲▲▲ SELESAI ▲▲▲ */
     </style>
 </head>
 <body>

@@ -1,39 +1,29 @@
 <?php
-// Selalu mulai session
 session_start();
 
-// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
 $batas_waktu = 1800; // 30 menit (1800 detik)
 
 if (isset($_SESSION['waktu_terakhir_aktif'])) {
     if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
         session_unset();
         session_destroy();
-        // Arahkan ke login dengan pesan
         header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
         exit();
     }
 }
-// Reset timer setiap kali halaman dimuat
 $_SESSION['waktu_terakhir_aktif'] = time();
-// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
 
-
-// 1. Cek apakah pengguna sudah login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// 2. Sertakan file koneksi
 require_once 'koneksi.php';
 
-// 3. Ambil data pengguna dan ID-nya
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
-$role = $_SESSION['role']; // Ambil role untuk navigasi
+$role = $_SESSION['role']; 
 
-// 4. Ambil data isi keranjang (JOIN dengan tabel products)
 $sql = "SELECT 
             p.product_id, 
             p.product_code, 
@@ -53,14 +43,12 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 $cart_items = [];
-$total_belanja = 0; // Variabel untuk menghitung total
+$total_belanja = 0; 
 
 if ($result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
-        // Hitung subtotal per item
         $row['subtotal'] = $row['price'] * $row['quantity'];
         $cart_items[] = $row;
-        // Tambahkan subtotal ke total belanja
         $total_belanja += $row['subtotal'];
     }
 }
@@ -80,14 +68,14 @@ $conn->close();
 
     <style>
         .navbar-brand {
-            padding-top: 0; /* Hapus padding-top default */
-            padding-bottom: 0; /* Hapus padding-bottom default */
-            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
+            padding-top: 0; 
+            padding-bottom: 0; 
+            margin-right: 0.5rem; 
         }
         .navbar-brand img {
-            height: 80px; /* Ukuran logo yang lebih terlihat */
+            height: 80px; 
             width: auto;
-            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
+            vertical-align: middle; 
         }
     </style>
     </head>
@@ -133,7 +121,7 @@ $conn->close();
                                 </ul>
                             </li>
 
-                        <?php else: // JIKA CUSTOMER BIASA ?>
+                        <?php else: ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                     Halo, <?php echo htmlspecialchars($username); ?>

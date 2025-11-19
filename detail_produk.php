@@ -1,17 +1,14 @@
 <?php
 session_start();
-require_once 'koneksi.php'; // Pastikan file ini menyediakan variabel $conn
+require_once 'koneksi.php'; 
 
-// 1. Ambil ID Produk dari URL
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($product_id === 0) {
-    // Jika tidak ada ID, kembalikan ke beranda
     header("Location: index.php");
     exit();
 }
 
-// 2. Ambil detail produk dari database
 $sql = "SELECT 
             p.product_id, 
             p.product_name, 
@@ -35,7 +32,6 @@ $result = $stmt->get_result();
 if ($result->num_rows > 0) {
     $product = $result->fetch_assoc();
 } else {
-    // Jika ID produk tidak ditemukan
     header("Location: index.php?error=Produk tidak ditemukan");
     exit();
 }
@@ -54,7 +50,6 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        /* CSS Tambahan */
         .product-image img {
             width: 100%;
             height: auto;
@@ -64,14 +59,14 @@ $conn->close();
             border: 1px solid #eee;
         }
         .navbar-brand {
-            padding-top: 0; /* Hapus padding-top default */
-            padding-bottom: 0; /* Hapus padding-bottom default */
-            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
+            padding-top: 0; 
+            padding-bottom: 0; 
+            margin-right: 0.5rem; 
         }
         .navbar-brand img {
-            height: 80px; /* Ukuran logo yang lebih terlihat */
+            height: 80px; 
             width: auto;
-            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
+            vertical-align: middle; 
         }
     </style>
 </head>

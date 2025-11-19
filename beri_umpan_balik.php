@@ -1,42 +1,34 @@
 <?php
 session_start();
 
-// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
 $batas_waktu = 1800; // 30 menit (1800 detik)
 
 if (isset($_SESSION['waktu_terakhir_aktif'])) {
     if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
         session_unset();
         session_destroy();
-        // Arahkan ke login dengan pesan
         header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
         exit();
     }
 }
-// Reset timer setiap kali halaman dimuat
 $_SESSION['waktu_terakhir_aktif'] = time();
-// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
 
+require_once 'koneksi.php'; 
 
-require_once 'koneksi.php'; // Pastikan $conn
-
-// 1. "Satpam" untuk Customer
 if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role'] == 'admin')) {
     header("Location: login.php?error=Silakan login sebagai pelanggan.");
     exit();
 }
 $user_id = $_SESSION['user_id'];
-$username = $_SESSION['username']; // Ambil username untuk navbar
-$role = $_SESSION['role']; // Ambil role untuk navbar
+$username = $_SESSION['username']; 
+$role = $_SESSION['role']; 
 
-// 2. Ambil ID Pesanan dari URL
 $order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
 if ($order_id === 0) {
     header('location: riwayat_pesanan.php?error=ID pesanan tidak valid');
     exit();
 }
 
-// 3. Cek Keamanan: Pastikan pesanan ini milik user yang login DAN statusnya "Selesai"
 $sql_cek = "SELECT order_id FROM orders WHERE order_id = ? AND user_id = ? AND status = 'Selesai'";
 $stmt_cek = $conn->prepare($sql_cek);
 $stmt_cek->bind_param("ii", $order_id, $user_id);
@@ -48,7 +40,6 @@ if ($result_cek->num_rows == 0) {
 }
 $stmt_cek->close();
 
-// 4. Cek Keamanan: Pastikan belum pernah memberi ulasan
 $sql_cek_fb = "SELECT id FROM feedback WHERE order_id = ?";
 $stmt_cek_fb = $conn->prepare($sql_cek_fb);
 $stmt_cek_fb->bind_param("i", $order_id);
@@ -60,8 +51,6 @@ if ($result_cek_fb->num_rows > 0) {
 }
 $stmt_cek_fb->close();
 
-
-// 5. Logika saat form DISIMPAN (POST)
 $pesan_error = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $rating = (int)$_POST['rating'];
@@ -97,26 +86,24 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        /* Rating Bintang */
         .rating-stars {
             display: inline-block;
-            direction: rtl; /* Balik urutan bintang */
+            direction: rtl; 
         }
         .rating-stars input[type=radio] {
-            display: none; /* Sembunyikan radio button asli */
+            display: none; 
         }
         .rating-stars label {
             font-size: 2em;
             color: #ddd;
             cursor: pointer;
             padding: 0 2px;
-            display: inline-block; /* Penting */
+            display: inline-block; 
         }
-        /* Saat di-hover atau di-check */
         .rating-stars:hover label,
-        .rating-stars:hover label ~ label, /* Hover bintang di kirinya */
+        .rating-stars:hover label ~ label, 
         .rating-stars input[type=radio]:checked ~ label {
-            color: #f0ad4e; /* Warna bintang terisi */
+            color: #f0ad4e; 
         }
     </style>
 </head>
@@ -160,7 +147,7 @@ $conn->close();
                                 </ul>
                             </li>
 
-                        <?php else: // JIKA CUSTOMER BIASA ?>
+                        <?php else:  ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                     Halo, <?php echo htmlspecialchars($username); ?>

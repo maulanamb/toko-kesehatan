@@ -3,21 +3,18 @@ session_start();
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
-// 1. Set variabel khusus halaman
 $page_title = "Edit Kategori";
 
 $pesan_error = "";
 $pesan_sukses = "";
 $kategori_nama = "";
 
-// 2. Ambil ID dari URL
 $category_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($category_id === 0) {
     header('location: kelola_kategori.php?status=id_tidak_valid');
     exit();
 }
 
-// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama_kategori_baru = $conn->real_escape_string($_POST['nama_kategori']);
     
@@ -38,8 +35,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// 4. Logika saat halaman DIBUKA (GET)
-// Ambil data lama untuk ditampilkan di form
 $sql_get = "SELECT category_name FROM categories WHERE category_id = ?";
 $stmt_get = $conn->prepare($sql_get);
 $stmt_get->bind_param("i", $category_id);
@@ -50,7 +45,6 @@ if ($result_get->num_rows > 0) {
     $kategori = $result_get->fetch_assoc();
     $kategori_nama = $kategori['category_name'];
 } else {
-    // Jika ID tidak ditemukan
     header('location: kelola_kategori.php?status=id_tidak_ditemukan');
     exit();
 }

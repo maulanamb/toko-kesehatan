@@ -1,35 +1,29 @@
 <?php
 session_start();
 
-// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
 $batas_waktu = 1800; // 30 menit (1800 detik)
 
 if (isset($_SESSION['waktu_terakhir_aktif'])) {
     if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
         session_unset();
         session_destroy();
-        // Arahkan ke login dengan pesan
         header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
         exit();
     }
 }
-// Reset timer setiap kali halaman dimuat
 $_SESSION['waktu_terakhir_aktif'] = time();
-// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
 
 
-require_once 'koneksi.php'; // Pastikan $conn
+require_once 'koneksi.php';
 
-// 1. "Satpam" untuk Customer
 if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role'] == 'admin')) {
     header("Location: login.php?error=Silakan login sebagai pelanggan.");
     exit();
 }
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
-$role = $_SESSION['role']; // Ambil role
+$role = $_SESSION['role'];
 
-// 2. Cek apakah user ini sudah punya toko
 $sql_cek_toko = "SELECT status FROM toko WHERE user_id = ?";
 $stmt_cek = $conn->prepare($sql_cek_toko);
 $stmt_cek->bind_param("i", $user_id);
@@ -42,12 +36,9 @@ if ($result_cek->num_rows > 0) {
 }
 $stmt_cek->close();
 
-
-// 3. Logika saat form DISIMPAN (POST)
 $pesan_error = "";
 $pesan_sukses = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST" && is_null($status_toko)) {
-    // Ambil data baru
     $nama_toko = $conn->real_escape_string($_POST['nama_toko']);
     $deskripsi_toko = $conn->real_escape_string($_POST['deskripsi_toko']);
     $no_telepon_toko = $conn->real_escape_string($_POST['no_telepon_toko']);
@@ -55,17 +46,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && is_null($status_toko)) {
     $kota_toko = $conn->real_escape_string($_POST['kota_toko']);
 
     if (!empty($nama_toko) && !empty($deskripsi_toko) && !empty($no_telepon_toko) && !empty($alamat_toko)) {
-        // Query INSERT baru dengan kolom tambahan
         $sql_insert = "INSERT INTO toko (user_id, nama_toko, deskripsi_toko, no_telepon_toko, alamat_toko, kota_toko, status) 
                        VALUES (?, ?, ?, ?, ?, ?, 'pending')";
         $stmt_insert = $conn->prepare($sql_insert);
         
-        // Perbaikan 'isssss' (6)
         $stmt_insert->bind_param("isssss", $user_id, $nama_toko, $deskripsi_toko, $no_telepon_toko, $alamat_toko, $kota_toko);
         
         if ($stmt_insert->execute()) {
             $pesan_sukses = "Pendaftaran toko Anda berhasil dikirim! Silakan tunggu persetujuan dari Admin.";
-            $status_toko = 'pending'; // Update status di halaman ini
+            $status_toko = 'pending'; 
         } else {
             $pesan_error = "Gagal mendaftar toko: " . $conn->error;
         }
@@ -91,14 +80,14 @@ $conn->close();
         .status-box { padding: 2rem; border-radius: 8px; text-align: center; }
 
         .navbar-brand {
-            padding-top: 0; /* Hapus padding-top default */
-            padding-bottom: 0; /* Hapus padding-bottom default */
-            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
+            padding-top: 0; 
+            padding-bottom: 0; 
+            margin-right: 0.5rem;
         }
         .navbar-brand img {
-            height: 80px; /* Ukuran logo yang lebih terlihat */
+            height: 80px;
             width: auto;
-            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
+            vertical-align: middle; 
         }
     </style>
 </head>
@@ -143,7 +132,7 @@ $conn->close();
                                 </ul>
                             </li>
 
-                        <?php else: // JIKA CUSTOMER BIASA ?>
+                        <?php else:  ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                     Halo, <?php echo htmlspecialchars($username); ?>
@@ -175,7 +164,7 @@ $conn->close();
                         if (!empty($pesan_error)) echo "<div class='alert alert-danger'>$pesan_error</div>";
                         ?>
 
-                        <?php if (is_null($status_toko)): // 1. Tampilkan form jika BELUM mendaftar ?>
+                        <?php if (is_null($status_toko)):  ?>
                             <p>Daftarkan toko Anda untuk mulai menjual produk alat kesehatan di platform kami.</p>
                             <form action="buka_toko.php" method="POST">
                                 <div class="mb-3">
@@ -201,20 +190,20 @@ $conn->close();
                                 <button type="submit" class="btn btn-primary w-100 py-2">Daftar Sekarang</button>
                             </form>
                         
-                        <?php elseif ($status_toko == 'pending'): // 2. Tampilkan status PENDING ?>
+                        <?php elseif ($status_toko == 'pending'):  ?>
                             <div class="status-box bg-warning-subtle text-dark-emphasis">
                                 <h3 class="h4">Pendaftaran Anda Sedang Ditinjau</h3>
                                 <p class="lead">Pendaftaran toko Anda telah kami terima dan sedang dalam proses peninjauan oleh Admin. Mohon tunggu 1-2 hari kerja.</p>
                             </div>
 
-                        <?php elseif ($status_toko == 'approved'): // 3. Tampilkan status APPROVED ?>
+                        <?php elseif ($status_toko == 'approved'): ?>
                             <div class="status-box bg-success-subtle text-success-emphasis">
                                 <h3 class="h4">Toko Anda Telah Disetujui!</h3>
                                 <p class="lead">Selamat! Toko Anda telah disetujui. Anda sekarang adalah seorang Vendor.</p>
                                 <a href="vendor/index.php" class="btn btn-success btn-lg mt-3">Masuk ke Dashboard Vendor</a>
                             </div>
 
-                        <?php elseif ($status_toko == 'rejected'): // 4. Tampilkan status REJECTED ?>
+                        <?php elseif ($status_toko == 'rejected'):  ?>
                              <div class="status-box bg-danger-subtle text-danger-emphasis">
                                 <h3 class="h4">Pendaftaran Ditolak</h3>
                                 <p class="lead">Maaf, pendaftaran toko Anda ditolak oleh Admin. Silakan hubungi kami untuk informasi lebih lanjut.</p>

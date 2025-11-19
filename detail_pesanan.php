@@ -1,24 +1,19 @@
 <?php
 session_start();
 
-// --- ▼▼▼ LOGIKA LOGOUT OTOMATIS (Poin 3) ▼▼▼ ---
 $batas_waktu = 1800; // 30 menit (1800 detik)
 
 if (isset($_SESSION['waktu_terakhir_aktif'])) {
     if (time() - $_SESSION['waktu_terakhir_aktif'] > $batas_waktu) {
         session_unset();
         session_destroy();
-        // Arahkan ke login dengan pesan
         header('location: login.php?error=' . urlencode('Sesi Anda telah berakhir, silakan login kembali.'));
         exit();
     }
 }
-// Reset timer setiap kali halaman dimuat
 $_SESSION['waktu_terakhir_aktif'] = time();
-// --- ▲▲▲ SELESAI LOGIKA LOGOUT ▲▲▲ ---
 
 
-// 1. Cek Login
 if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role'] == 'admin')) {
     header("Location: login.php");
     exit();
@@ -27,15 +22,13 @@ if (!isset($_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role
 require_once 'koneksi.php';
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
-$role = $_SESSION['role']; // Ambil role
+$role = $_SESSION['role']; 
 
-// 2. Ambil ID pesanan dari URL
 $order_id = $_GET['order_id'] ?? 0;
 if ($order_id == 0) {
     die("Error: ID Pesanan tidak valid.");
 }
 
-// 3. Keamanan: Cek apakah pesanan ini milik pengguna yang sedang login
 $sql_order = "SELECT * FROM orders WHERE order_id = ? AND user_id = ?";
 $stmt_order = $conn->prepare($sql_order);
 $stmt_order->bind_param("ii", $order_id, $user_id);
@@ -43,14 +36,11 @@ $stmt_order->execute();
 $result_order = $stmt_order->get_result();
 
 if ($result_order->num_rows == 0) {
-    // Jika tidak, tolak akses!
     die("Error: Pesanan tidak ditemukan atau bukan milik Anda.");
 }
 $order = $result_order->fetch_assoc();
 $stmt_order->close();
 
-
-// 4. Ambil item-item detail untuk pesanan ini (JOIN)
 $sql_items = "SELECT p.product_name, p.product_code, od.quantity, od.price_at_purchase
               FROM order_details od
               JOIN products p ON od.product_id = p.product_id
@@ -74,7 +64,6 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        /* CSS tambahan untuk status */
         .status { 
             font-weight: bold; 
             padding: 5px 8px;
@@ -128,7 +117,7 @@ $conn->close();
                                 </ul>
                             </li>
 
-                        <?php else: // JIKA CUSTOMER BIASA ?>
+                        <?php else: ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                     Halo, <?php echo htmlspecialchars($username); ?>

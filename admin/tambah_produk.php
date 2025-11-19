@@ -1,18 +1,14 @@
 <?php
 session_start();
 
-// 1. Set variabel khusus halaman
 $page_title = "Tambah Produk Baru";
 
-// 2. Panggil Satpam
 require_once 'cek_admin.php'; 
 require_once '../koneksi.php'; 
 
 $pesan_error = "";
 
-// 3. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil data form
     $nama_produk = $conn->real_escape_string($_POST['nama_produk']);
     $deskripsi = $conn->real_escape_string($_POST['deskripsi']);
     $harga = (float) $_POST['harga'];
@@ -65,7 +61,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Ambil data kategori untuk dropdown
 $category_query = "SELECT category_id, category_name FROM categories ORDER BY category_name ASC";
 $category_result = $conn->query($category_query);
 

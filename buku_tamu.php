@@ -1,17 +1,15 @@
 <?php
 session_start();
-require_once 'koneksi.php'; // Pastikan $conn
+require_once 'koneksi.php'; 
 
 $pesan_error = "";
 $pesan_sukses = "";
 
-// 1. Logika saat form DISIMPAN (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama = $conn->real_escape_string($_POST['nama']);
     $email = $conn->real_escape_string($_POST['email']);
     $pesan = $conn->real_escape_string($_POST['pesan']);
 
-    // Validasi sederhana
     if (!empty($nama) && !empty($pesan)) {
         $sql = "INSERT INTO buku_tamu (nama, email, pesan) VALUES (?, ?, ?)";
         $stmt = $conn->prepare($sql);
@@ -28,8 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// 2. Logika untuk MENAMPILKAN pesan yang ada
-$sql_get = "SELECT nama, pesan, tanggal_kirim FROM buku_tamu ORDER BY tanggal_kirim DESC LIMIT 20"; // Ambil 20 terbaru
+$sql_get = "SELECT nama, pesan, tanggal_kirim FROM buku_tamu ORDER BY tanggal_kirim DESC LIMIT 20"; 
 $result_pesan = $conn->query($sql_get);
 $pesan_list = $result_pesan->fetch_all(MYSQLI_ASSOC);
 
@@ -48,14 +45,14 @@ $conn->close();
 
     <style>
         .navbar-brand {
-            padding-top: 0; /* Hapus padding-top default */
-            padding-bottom: 0; /* Hapus padding-bottom default */
-            margin-right: 0.5rem; /* Beri sedikit jarak dengan menu */
+            padding-top: 0; 
+            padding-bottom: 0; 
+            margin-right: 0.5rem;
         }
         .navbar-brand img {
-            height: 80px; /* Ukuran logo yang lebih terlihat */
+            height: 80px; 
             width: auto;
-            vertical-align: middle; /* Pastikan sejajar dengan teks jika ada */
+            vertical-align: middle; 
         }
     </style>
     </head>
